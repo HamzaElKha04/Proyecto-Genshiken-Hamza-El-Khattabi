@@ -1,0 +1,147 @@
+/*
+--------------------------------------------------
+Estilos del panel de administración
+--------------------------------------------------
+
+Este archivo contiene los estilos principales del
+login y de las distintas páginas del panel admin.
+
+Define la apariencia general del sistema, incluyendo:
+- Pantalla de acceso
+- Barra superior
+- Tarjetas del dashboard
+- Botones y cajas de error
+*/
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f4f6f9;
+    color: #222;
+}
+
+.login-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1f3c88, #39a2db);
+}
+
+.login-box {
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    padding: 30px;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.login-box h1 {
+    margin-bottom: 10px;
+    font-size: 28px;
+    color: #1f3c88;
+}
+
+.login-box p {
+    margin-bottom: 20px;
+    color: #666;
+}
+
+.login-box label {
+    display: block;
+    margin-bottom: 6px;
+    margin-top: 14px;
+    font-weight: bold;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.login-box button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border: none;
+    background: #1f3c88;
+    color: white;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.login-box button:hover {
+    background: #162d66;
+}
+
+.error-box {
+    background: #ffd7d7;
+    color: #a10000;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.topbar {
+    background: #1f3c88;
+    color: white;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar h1 {
+    margin-bottom: 5px;
+}
+
+.logout-btn {
+    background: #e74c3c;
+    color: white;
+    text-decoration: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+}
+
+.dashboard-container {
+    padding: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    padding: 22px;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.card h2 {
+    margin-bottom: 12px;
+    color: #1f3c88;
+}
+
+.card p {
+    margin-bottom: 15px;
+    color: #555;
+    line-height: 1.5;
+}
+
+.card button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    background: #bfc9d9;
+    color: #333;
+    cursor: not-allowed;
+}
