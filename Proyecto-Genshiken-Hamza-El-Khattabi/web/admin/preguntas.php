@@ -1,4 +1,4 @@
-<?php
+<?php 
 /*
 --------------------------------------------------
 Panel de administración - Listado de preguntas
@@ -152,7 +152,10 @@ if (!$resultado) {
             <p class="texto-seccion">Aquí se muestran las preguntas registradas en la base de datos.</p>
         </div>
 
-        <a href="dashboard.php" class="btn-volver">Volver al panel</a>
+        <div>
+            <a href="crear_pregunta.php" class="btn-editar">+ Nueva pregunta</a>
+            <a href="dashboard.php" class="btn-volver">Volver al panel</a>
+        </div>
     </div>
 
     <table class="tabla-preguntas">
