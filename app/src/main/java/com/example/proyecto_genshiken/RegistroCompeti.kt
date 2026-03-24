@@ -117,19 +117,35 @@ fun RegistroCompeti(navController: NavHostController){
                 Spacer(modifier = Modifier.height(20.dp))
 
                Button(
-                   onClick= { if (contraseña.isBlank() || usuario.isBlank() ||email.isBlank()) {
-                       mensajeError = "Todos los campos deben ser rellenados"
-                   }
-                       else if (contraseña.length<8){
-                           mensajeError=" la contraseña no puede tener menos de 8 caracteres"
-                   } else if(usuario.length>20){
-                       mensajeError="El nombre de usuario no puede ser tan largo"
-                   }
+                   onClick = {
 
-                   else{
-                       mensajeError=""
-                       navController.navigate("juego")
-                   }
+                       if (contraseña.isBlank() || usuario.isBlank() || email.isBlank()) {
+                           mensajeError = "Todos los campos deben ser rellenados"
+                           return@Button
+                       }
+
+                       if (contraseña.length < 8) {
+                           mensajeError = "La contraseña no puede tener menos de 8 caracteres"
+                           return@Button
+                       }
+
+                       if (usuario.length > 20) {
+                           mensajeError = "El nombre de usuario no puede ser tan largo"
+                           return@Button
+                       }
+
+                       // ESTO OCURRIRÁ SOLO SI TODO ESTÁ BIEN
+                       UserRepository.register(usuario, email, contraseña) {
+
+                           when (it) {
+                               "EXISTE" -> mensajeError = "El correo ya está registrado"
+                               "OK" -> {
+                                   mensajeError = "Registro correcto"
+                                   navController.navigate("inicio")
+                               }
+                               else -> mensajeError = "Error en registro"
+                           }
+                       }
                    },
                    modifier = Modifier.fillMaxWidth(),
                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)

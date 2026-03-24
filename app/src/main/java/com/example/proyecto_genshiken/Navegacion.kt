@@ -34,6 +34,7 @@ fun Navegacion(navController: NavHostController){
             RegistroCompeti(navController)
         }
         composable("Juego"){
+            Juego(navController)
 
         }
     }

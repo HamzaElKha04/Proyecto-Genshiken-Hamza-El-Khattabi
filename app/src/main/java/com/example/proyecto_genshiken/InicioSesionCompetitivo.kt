@@ -1,3 +1,4 @@
+import android.R.attr.password
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.proyecto_genshiken.UserRepository
+import com.example.proyecto_genshiken.UserSession
 
 @Composable
 fun InicioCompetitivo(navController: NavHostController) {
@@ -109,14 +112,26 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Button(
                     onClick = {
-                        if (email.isBlank() || contraseña.isBlank()) {
-                            mensajeError = "Todos los campos son obligatorios"
-                        } else if (contraseña.length < 4) {
-                            mensajeError = "La contraseña debe tener al menos 4 caracteres"
-                        } else {
-                            mensajeError = ""
-                            navController.navigate("juego")
+
+                        UserRepository.login(email, contraseña) { success, id, nombre ->
+
+                            if (success) {
+
+                                UserSession.userId = id
+                                UserSession.userName = nombre
+
+                                navController.navigate("Juego")
+
+                            }
+                            else if(email.isBlank() || contraseña.isBlank()){
+                                mensajeError="no pueden haber campos sin información"
+                            }
+
+                            else {
+                                mensajeError = "Correo o contraseña incorrectos"
+                            }
                         }
+
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

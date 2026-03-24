@@ -12,6 +12,12 @@ navigationCompose = "2.9.7"
 ui = "1.10.4"
 glance = "1.1.1"
 material3 = "1.4.0"
+uiGraphics = "1.10.4"
+runtime = "1.10.4"
+volley = "1.2.1"
+foundation = "1.10.4"
+benchmarkTraceprocessor = "1.4.1"
+foundationLayout = "1.10.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +38,12 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 androidx-glance = { group = "androidx.glance", name = "glance", version.ref = "glance" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
+volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-benchmark-traceprocessor = { group = "androidx.benchmark", name = "benchmark-traceprocessor", version.ref = "benchmarkTraceprocessor" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
