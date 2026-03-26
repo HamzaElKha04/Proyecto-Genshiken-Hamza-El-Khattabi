@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.remote.creation.random
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,7 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -41,6 +43,10 @@ import kotlin.math.sin
 
 @Composable
 fun RegistroCompeti(navController: NavHostController){
+
+    val curiosidad = remember {
+        Curiosidades.lista.random()
+    }
     var usuario by remember {
         mutableStateOf("")
     }
@@ -53,6 +59,8 @@ fun RegistroCompeti(navController: NavHostController){
     var mensajeError by remember{
         mutableStateOf("")
     }
+
+
 
 
 
@@ -80,7 +88,7 @@ fun RegistroCompeti(navController: NavHostController){
         Spacer(modifier = Modifier.height(20.dp))
 
         Card(
-            modifier = Modifier.fillMaxWidth()
+
         ) {
             Column(
                 modifier = Modifier.padding(16.dp).fillMaxSize(),
@@ -112,6 +120,7 @@ fun RegistroCompeti(navController: NavHostController){
                     onValueChange = { contraseña = it },
                     label = {Text("Contraseña") },
                     singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(20.dp))
@@ -171,6 +180,34 @@ fun RegistroCompeti(navController: NavHostController){
                         navController.navigate("inicioSesionCompeti")
                     }
                 )
+
+                Spacer(modifier = Modifier.height(30.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    Column(
+
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+
+                        Text(
+                            text = "¿Sabías que?",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 32.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = curiosidad,
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
 
 
 

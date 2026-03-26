@@ -87,7 +87,11 @@ fun PantallaInicio(navController: NavController) {
                     .fillMaxWidth()
                     .height(120.dp)
                     .clickable {
-                        navController.navigate("inicioSesionCompeti")
+                        if (UserSession.userId==0) {
+                            navController.navigate("inicioSesionCompeti")
+                        } else{
+                            navController.navigate("Juego")
+                        }
                     },
                 contentScale = ContentScale.Fit
             )
