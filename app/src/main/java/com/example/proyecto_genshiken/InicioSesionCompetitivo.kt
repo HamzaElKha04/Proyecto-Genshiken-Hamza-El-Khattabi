@@ -2,6 +2,7 @@ package com.example.proyecto_genshiken
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,6 +49,18 @@ fun InicioCompetitivo(navController: NavHostController) {
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "←",
+                fontSize = 24.sp,
+                modifier = Modifier.clickable {
+                    navController.navigate("inicio")
+                }
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 

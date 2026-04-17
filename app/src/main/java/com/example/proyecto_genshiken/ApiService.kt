@@ -30,4 +30,13 @@ interface ApiService {
 
     @GET("get_ranking.php")
     fun getRanking(): Call<List<Player>>
+
+    @FormUrlEncoded
+    @POST("change_name.php")
+    fun changeName(
+        @Field("nombreActual") nombreActual: String,
+        @Field("nuevoNombre") nuevoNombre: String,
+        @Field("email") email: String,
+        @Field("password") password: String
+    ): retrofit2.Call<String>
 }

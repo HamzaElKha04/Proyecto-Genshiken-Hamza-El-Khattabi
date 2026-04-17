@@ -102,4 +102,28 @@ object UserRepository {
                 }
             })
     }
+
+    fun changeName(
+        nombreActual: String,
+        nuevoNombre: String,
+        email: String,
+        password: String,
+        onResult: (String) -> Unit
+    ) {
+
+        RetrofitClient.api.changeName(nombreActual, nuevoNombre, email, password)
+            .enqueue(object : retrofit2.Callback<String> {
+
+                override fun onResponse(
+                    call: retrofit2.Call<String>,
+                    response: retrofit2.Response<String>
+                ) {
+                    onResult(response.body() ?: "ERROR")
+                }
+
+                override fun onFailure(call: retrofit2.Call<String>, t: Throwable) {
+                    onResult("ERROR")
+                }
+            })
+    }
 }

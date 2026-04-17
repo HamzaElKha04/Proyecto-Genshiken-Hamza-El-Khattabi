@@ -36,5 +36,8 @@ fun Navegacion(navController: NavHostController){
             Juego(navController)
 
         }
+        composable("cambiarNombre") {
+            CambiarNombre(navController)
+        }
     }
 }

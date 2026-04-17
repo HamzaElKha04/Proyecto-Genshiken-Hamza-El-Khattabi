@@ -1,6 +1,6 @@
 package com.example.proyecto_genshiken
 
-import androidx.benchmark.traceprocessor.Row
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -116,16 +117,21 @@ fun Juego(navController: NavHostController){
 
                     repuestaElegida = index
 
-                    if(index == pregunta.opcionCorrecta){
+                    if (index == pregunta.opcionCorrecta) {
 
                         puntuacion += 1000
                         respuestaCorrecta++
                         estadoRespuesta[numeroPregunta] = EstadoRespuesta.CORRECT
 
-                    }else{
+
+
+                    } else {
 
                         puntuacion -= 200
                         estadoRespuesta[numeroPregunta] = EstadoRespuesta.WRONG
+
+
+
                     }
 
                 }
@@ -205,46 +211,53 @@ fun Header(nivel:Int,tiempo:Int,puntuacion:Int){
 @Composable
 fun Opciones(
     opciones: List<String>,
-    respuestaElegida:Int?,
-    onClick:(Int)->Unit
-){
+    respuestaElegida: Int?,
+    onClick: (Int) -> Unit
+) {
 
-    Column {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
 
-        Row {
-
-            Boton(opciones[0],Color.Red){ onClick(0) }
-            Spacer(Modifier.width(16.dp))
-            Boton(opciones[1],Color.Yellow){ onClick(1) }
-
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Boton(opciones[0], Color.Red, Modifier.weight(1f)) { onClick(0) }
+            Boton(opciones[1], Color.Yellow, Modifier.weight(1f)) { onClick(1) }
         }
 
-        Spacer(Modifier.height(16.dp))
-
-        Row {
-
-            Boton(opciones[2],Color.Cyan){ onClick(2) }
-            Spacer(Modifier.width(16.dp))
-            Boton(opciones[3],Color.Green){ onClick(3) }
-
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Boton(opciones[2], Color.Cyan, Modifier.weight(1f)) { onClick(2) }
+            Boton(opciones[3], Color.Green, Modifier.weight(1f)) { onClick(3) }
         }
     }
 }
 
 @Composable
 fun Boton(
-    text:String,
-    color:Color,
-    onClick:()->Unit
-){
-
-    Box(
-        modifier = Modifier
-            .background(color)
-            .padding(12.dp)
-            .clickable { onClick() }
-    ){
-        Text(text,fontSize = 18.sp)
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .height(60.dp),
+        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+            containerColor = color
+        )
+    ) {
+        Text(
+            text = text,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
     }
 }
 @Composable

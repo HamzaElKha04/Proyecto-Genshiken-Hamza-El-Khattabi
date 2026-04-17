@@ -5,6 +5,7 @@ import android.R.attr.onClick
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -70,6 +71,18 @@ fun RegistroCompeti(navController: NavHostController){
 
     )
     {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "←",
+                fontSize = 24.sp,
+                modifier = Modifier.clickable {
+                    navController.navigate("inicio")
+                }
+            )
+        }
         Spacer(modifier = Modifier.height(32.dp))
         Text(
             text = "Registro",
