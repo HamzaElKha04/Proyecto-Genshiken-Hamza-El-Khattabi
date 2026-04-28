@@ -2,7 +2,7 @@ package com.example.proyecto_genshiken
 
 import com.example.proyecto_genshiken.Preguntas
 import com.example.proyecto_genshiken.R
-class PreguntasJuego {
+
     object PreguntasJuego {
 
         val level1 = listOf(
@@ -68,7 +68,7 @@ class PreguntasJuego {
             )
         )
 
-        val nivel2=listOf(
+        val level2=listOf(
             Preguntas(
                 R.drawable.espada_lostavayne,
                 "¿A quien pertenece esta espada?",
@@ -77,4 +77,3 @@ class PreguntasJuego {
             )
         )
     }
-}

@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -49,13 +50,14 @@ fun PantallaInicio(navController: NavController) {
     val curiosidad = remember {
         Curiosidades.lista.random()
     }
+    val context = LocalContext.current
 
     var expandir by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background), // 👈 FONDO DINÁMICO
+            .background(MaterialTheme.colorScheme.background),
     ) {
 
         Column(
@@ -65,7 +67,7 @@ fun PantallaInicio(navController: NavController) {
             Text(
                 text = "⚙️",
                 fontSize = 24.sp,
-                color = MaterialTheme.colorScheme.onBackground, // 👈 COLOR DINÁMICO
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
                     .padding(16.dp)
                     .clickable { expandir = true }
@@ -83,7 +85,9 @@ fun PantallaInicio(navController: NavController) {
                     },
                     onClick = {
                         expandir = false
-                        ThemeState.isDarkMode.value = !ThemeState.isDarkMode.value // 👈 ACTIVAR
+                        val newValue = !ThemeState.isDarkMode.value
+                        ThemeState.isDarkMode.value = newValue
+                        ThemePreferences.saveDarkMode(context, newValue)
                     }
                 )
 

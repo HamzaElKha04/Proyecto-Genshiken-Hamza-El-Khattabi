@@ -46,10 +46,12 @@ import androidx.navigation.NavHostController
 import com.android.volley.Header
 import kotlinx.coroutines.delay
 import kotlin.collections.forEachIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun Juego(navController: NavHostController){
-    val preguntas = PreguntasJuego.PreguntasJuego.level1
+
 
     var nivel by remember { mutableStateOf(1) }
     var numeroPregunta by remember { mutableStateOf(0) }
@@ -65,12 +67,19 @@ fun Juego(navController: NavHostController){
         }
     }
 
-    var tiempo by remember { mutableStateOf(0) }
+    var tiempoTotal by remember { mutableStateOf(0) }
+    var tiempoNivel by remember { mutableStateOf(0) }
 
+    val preguntas = when (nivel) {
+        1 -> PreguntasJuego.level1
+        2 -> PreguntasJuego.level2
+        else -> PreguntasJuego.level1
+    }
     LaunchedEffect(Unit){
         while(true){
             delay(1000)
-            tiempo++
+            tiempoTotal++
+            tiempoNivel++
         }
     }
 
@@ -79,12 +88,14 @@ fun Juego(navController: NavHostController){
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp).
+            verticalScroll(rememberScrollState()).
+            padding(bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         Spacer(Modifier.height(40.dp))
-        Header(nivel,tiempo,puntuacion)
+        Header(nivel,tiempoTotal,puntuacion)
         Spacer(Modifier.height(40.dp))
 
         Image(
@@ -148,20 +159,32 @@ fun Juego(navController: NavHostController){
 
             Button(onClick = {
 
-                val timeBonus = (600-tiempo)*10
+                val timeBonus = (600 - tiempoNivel).coerceAtLeast(0) * 10
                 puntuacion += timeBonus
 
                 UserRepository.saveScore(UserSession.userId, puntuacion)
 
 
-                if(respuestaCorrecta >=5){
+                if (respuestaCorrecta >= 5) {
+                    tiempoNivel = 0
+                    if (nivel < 5) {
+                        nivel++
+                        numeroPregunta = 0
+                        respuestaCorrecta = 0
+                        repuestaElegida = null
+                        colorFondo = Color.Transparent
 
-                    navController.navigate("Nivel2")
+                        tiempoNivel = 0
 
-                }else{
+                        estadoRespuesta.clear()
+                        repeat(10) { estadoRespuesta.add(EstadoRespuesta.PENDING) }
 
+                    } else {
+                        navController.navigate("Ranking")
+                    }
+
+                } else {
                     navController.navigate("Ranking")
-
                 }
 
             }){

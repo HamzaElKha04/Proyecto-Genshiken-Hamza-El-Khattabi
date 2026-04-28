@@ -102,7 +102,7 @@ object UserRepository {
                 }
             })
     }
-
+        // con esta funcion permitiremos el cambio de nombre
     fun changeName(
         nombreActual: String,
         nuevoNombre: String,

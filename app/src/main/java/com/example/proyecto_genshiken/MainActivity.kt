@@ -18,9 +18,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+
+            val context = this
+
+            // Aqui es donde voy a cargar el modo elegido por el usuario a la hora de volver a iniciar la app, para que asi el modo oscuro o claro prevalezca hasta que se cambie de nuevo la opcion
+            ThemeState.isDarkMode.value = ThemePreferences.loadDarkMode(context)
+
             Proyecto_GenshikenTheme {
-                Surface(color= MaterialTheme.colorScheme.background){
-                    val navController=rememberNavController()
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    val navController = rememberNavController()
                     Navegacion(navController)
                 }
             }
