@@ -1,10 +1,7 @@
 package com.example.proyecto_genshiken
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,15 +13,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,193 +28,292 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import com.android.volley.Header
+import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
-import kotlin.collections.forEachIndexed
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 
+/*
+--------------------------------------------------
+Pantalla del juego
+--------------------------------------------------
+
+Esta pantalla ya queda conectada al backend PHP.
+
+Antes:
+- usaba preguntas locales de PreguntasJuego.kt
+
+Ahora:
+- carga preguntas desde getPreguntas.php
+- muestra respuestas guardadas en MySQL
+- carga imágenes desde WEB_genshi/img/
+- guarda la puntuación en guardarPuntuacion.php
+
+Con esto, las preguntas creadas desde el panel admin
+pueden aparecer directamente en la app Android.
+*/
 @Composable
-fun Juego(navController: NavHostController){
-
+fun Juego(navController: NavHostController) {
 
     var nivel by remember { mutableStateOf(1) }
+
+    var preguntas by remember { mutableStateOf<List<PreguntaApi>>(emptyList()) }
+    var cargando by remember { mutableStateOf(true) }
+    var errorCarga by remember { mutableStateOf("") }
+
     var numeroPregunta by remember { mutableStateOf(0) }
     var puntuacion by remember { mutableStateOf(0) }
-    var respuestaCorrecta by remember { mutableStateOf(0) }
-
-    var repuestaElegida by remember { mutableStateOf<Int?>(null) }
-    var colorFondo by remember { mutableStateOf(Color.Transparent) }
-
-    val estadoRespuesta = remember {
-        mutableStateListOf<EstadoRespuesta>().apply {
-            repeat(10){ add(EstadoRespuesta.PENDING) }
-        }
-    }
+    var respuestasCorrectas by remember { mutableStateOf(0) }
+    var respuestaElegida by remember { mutableStateOf<Int?>(null) }
+    var mensajeResultado by remember { mutableStateOf("") }
 
     var tiempoTotal by remember { mutableStateOf(0) }
-    var tiempoNivel by remember { mutableStateOf(0) }
+    var guardandoPuntuacion by remember { mutableStateOf(false) }
 
-    val preguntas = when (nivel) {
-        1 -> PreguntasJuego.level1
-        2 -> PreguntasJuego.level2
-        else -> PreguntasJuego.level1
+    val estadoRespuesta = remember {
+        mutableStateListOf<EstadoRespuesta>()
     }
-    LaunchedEffect(Unit){
-        while(true){
-            delay(1000)
-            tiempoTotal++
-            tiempoNivel++
+
+    /*
+    --------------------------------------------------
+    Cargar preguntas desde PHP
+    --------------------------------------------------
+
+    Cada vez que cambia el nivel, se pide a la API:
+    getPreguntas.php?nivel=1
+    */
+    LaunchedEffect(nivel) {
+        cargando = true
+        errorCarga = ""
+
+        UserRepository.getPreguntas(nivel) { ok, lista ->
+            if (ok && lista.isNotEmpty()) {
+                preguntas = lista
+                numeroPregunta = 0
+                puntuacion = 0
+                respuestasCorrectas = 0
+                respuestaElegida = null
+                mensajeResultado = ""
+                tiempoTotal = 0
+
+                estadoRespuesta.clear()
+                repeat(lista.size) { index ->
+                    if (index == 0) {
+                        estadoRespuesta.add(EstadoRespuesta.CURRENT)
+                    } else {
+                        estadoRespuesta.add(EstadoRespuesta.PENDING)
+                    }
+                }
+
+                cargando = false
+            } else {
+                preguntas = emptyList()
+                errorCarga = "No se pudieron cargar preguntas desde el backend."
+                cargando = false
+            }
         }
     }
 
-    val pregunta = preguntas[numeroPregunta]
+    /*
+    --------------------------------------------------
+    Temporizador del juego
+    --------------------------------------------------
+    */
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+
+            if (!cargando && preguntas.isNotEmpty() && !guardandoPuntuacion) {
+                tiempoTotal++
+            }
+        }
+    }
+
+    /*
+    --------------------------------------------------
+    Estados de carga
+    --------------------------------------------------
+    */
+    if (cargando) {
+        PantallaEstadoJuego("Cargando preguntas desde MySQL...")
+        return
+    }
+
+    if (errorCarga.isNotEmpty()) {
+        PantallaEstadoJuego(errorCarga)
+        return
+    }
+
+    val pregunta = preguntas.getOrNull(numeroPregunta)
+
+    if (pregunta == null) {
+        PantallaEstadoJuego("No hay pregunta disponible.")
+        return
+    }
+
+    val respuestas = pregunta.respuestas.take(4)
+    val indiceCorrecto = respuestas.indexOfFirst { it.correcta == 1 }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp).
-            verticalScroll(rememberScrollState()).
-            padding(bottom = 24.dp),
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
         Spacer(Modifier.height(40.dp))
-        Header(nivel,tiempoTotal,puntuacion)
-        Spacer(Modifier.height(40.dp))
 
-        Image(
-            painter = painterResource(pregunta.imagen),
-            contentDescription = null,
-            modifier = Modifier.size(200.dp)
+        HeaderJuego(
+            nivel = nivel,
+            tiempo = tiempoTotal,
+            puntuacion = puntuacion
         )
 
-        Spacer(Modifier.height(80.dp))
+        Spacer(Modifier.height(35.dp))
 
-        Box(
-            modifier = Modifier
-                .background(colorFondo)
-                .padding(8.dp)
-        ){
+        /*
+        --------------------------------------------------
+        Imagen de la pregunta
+        --------------------------------------------------
+        */
+        AsyncImage(
+            model = RetrofitClient.getImageUrl(pregunta.imagen),
+            contentDescription = "Imagen de la pregunta",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.size(220.dp)
+        )
+
+        Spacer(Modifier.height(45.dp))
+
+        Text(
+            text = pregunta.pregunta,
+            fontSize = 20.sp
+        )
+
+        Spacer(Modifier.height(35.dp))
+
+        /*
+        --------------------------------------------------
+        Respuestas
+        --------------------------------------------------
+        */
+        OpcionesApi(
+            respuestas = respuestas,
+            respuestaElegida = respuestaElegida,
+            indiceCorrecto = indiceCorrecto,
+            onClick = { index ->
+
+                if (respuestaElegida == null) {
+                    respuestaElegida = index
+
+                    if (index == indiceCorrecto) {
+                        puntuacion += 1000
+                        respuestasCorrectas++
+                        mensajeResultado = "Correcta"
+                        estadoRespuesta[numeroPregunta] = EstadoRespuesta.CORRECT
+                    } else {
+                        puntuacion -= 200
+                        mensajeResultado = "Incorrecta"
+                        estadoRespuesta[numeroPregunta] = EstadoRespuesta.WRONG
+                    }
+                }
+            }
+        )
+
+        Spacer(Modifier.height(18.dp))
+
+        if (mensajeResultado.isNotEmpty()) {
             Text(
-                pregunta.preguntas,
-                fontSize = 20.sp
+                text = mensajeResultado,
+                color = if (mensajeResultado == "Correcta") Color(0xFF008000) else Color.Red,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
             )
         }
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(30.dp))
 
-        Opciones (
-            opciones = pregunta.opciones,
-            respuestaElegida = repuestaElegida,
-            onClick = { index ->
-
-                if(repuestaElegida==null){
-
-                    repuestaElegida = index
-
-                    if (index == pregunta.opcionCorrecta) {
-
-                        puntuacion += 1000
-                        respuestaCorrecta++
-                        estadoRespuesta[numeroPregunta] = EstadoRespuesta.CORRECT
-
-
-
-                    } else {
-
-                        puntuacion -= 200
-                        estadoRespuesta[numeroPregunta] = EstadoRespuesta.WRONG
-
-
-
-                    }
-
-                }
-            }
+        QuestionProgressApi(
+            states = estadoRespuesta
         )
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(35.dp))
 
-        QuestionProgress(estadoRespuesta,numeroPregunta)
+        /*
+        --------------------------------------------------
+        Finalizar o pasar a la siguiente pregunta
+        --------------------------------------------------
+        */
+        if (numeroPregunta == preguntas.lastIndex) {
+            Button(
+                enabled = respuestaElegida != null && !guardandoPuntuacion,
+                onClick = {
+                    guardandoPuntuacion = true
 
-        Spacer(Modifier.height(40.dp))
-
-        if(numeroPregunta == 9){
-
-            Button(onClick = {
-
-                val timeBonus = (600 - tiempoNivel).coerceAtLeast(0) * 10
-                puntuacion += timeBonus
-
-                UserRepository.saveScore(UserSession.userId, puntuacion)
-
-
-                if (respuestaCorrecta >= 5) {
-                    tiempoNivel = 0
-                    if (nivel < 5) {
-                        nivel++
-                        numeroPregunta = 0
-                        respuestaCorrecta = 0
-                        repuestaElegida = null
-                        colorFondo = Color.Transparent
-
-                        tiempoNivel = 0
-
-                        estadoRespuesta.clear()
-                        repeat(10) { estadoRespuesta.add(EstadoRespuesta.PENDING) }
-
-                    } else {
+                    UserRepository.saveScore(
+                        usuarioId = UserSession.userId,
+                        puntuacion = puntuacion,
+                        tiempo = tiempoTotal
+                    ) { _, _ ->
+                        guardandoPuntuacion = false
                         navController.navigate("Ranking")
                     }
-
-                } else {
-                    navController.navigate("Ranking")
-                }
-
-            }){
-
-                Text("Finalizar nivel")
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF6B4CB3)
+                )
+            ) {
+                Text(
+                    text = if (guardandoPuntuacion) "Guardando..." else "Finalizar partida",
+                    color = Color.White
+                )
             }
-
-        }else{
-
-            Button(onClick = {
-
-                if(repuestaElegida!=null){
-
+        } else {
+            Button(
+                enabled = respuestaElegida != null,
+                onClick = {
                     numeroPregunta++
-                    repuestaElegida = null
-                    colorFondo = Color.Transparent
-                    estadoRespuesta[numeroPregunta] = EstadoRespuesta.CURRENT
-                }
+                    respuestaElegida = null
+                    mensajeResultado = ""
 
-            }){
-
-                Text("Siguiente")
+                    if (numeroPregunta < estadoRespuesta.size) {
+                        estadoRespuesta[numeroPregunta] = EstadoRespuesta.CURRENT
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF6B4CB3)
+                )
+            ) {
+                Text(
+                    text = "Siguiente",
+                    color = Color.White
+                )
             }
         }
     }
 }
 
+/*
+--------------------------------------------------
+Cabecera del juego
+--------------------------------------------------
+*/
 @Composable
-fun Header(nivel:Int,tiempo:Int,puntuacion:Int){
-
+fun HeaderJuego(
+    nivel: Int,
+    tiempo: Int,
+    puntuacion: Int
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
-    ){
-
+    ) {
         Text("Nivel $nivel")
-
         Text("Tiempo $tiempo")
 
         Column {
@@ -231,48 +323,85 @@ fun Header(nivel:Int,tiempo:Int,puntuacion:Int){
     }
 }
 
+/*
+--------------------------------------------------
+Opciones de respuesta recibidas desde MySQL
+--------------------------------------------------
+*/
 @Composable
-fun Opciones(
-    opciones: List<String>,
+fun OpcionesApi(
+    respuestas: List<RespuestaApi>,
     respuestaElegida: Int?,
+    indiceCorrecto: Int,
     onClick: (Int) -> Unit
 ) {
+    val coloresBase = listOf(
+        Color.Red,
+        Color.Yellow,
+        Color.Cyan,
+        Color.Green
+    )
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        respuestas.chunked(2).forEachIndexed { filaIndex, fila ->
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Boton(opciones[0], Color.Red, Modifier.weight(1f)) { onClick(0) }
-            Boton(opciones[1], Color.Yellow, Modifier.weight(1f)) { onClick(1) }
-        }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                fila.forEachIndexed { columnaIndex, respuesta ->
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Boton(opciones[2], Color.Cyan, Modifier.weight(1f)) { onClick(2) }
-            Boton(opciones[3], Color.Green, Modifier.weight(1f)) { onClick(3) }
+                    val index = filaIndex * 2 + columnaIndex
+
+                    val colorBoton = when {
+                        respuestaElegida == null -> coloresBase[index % coloresBase.size]
+                        index == indiceCorrecto -> Color.Green
+                        index == respuestaElegida && index != indiceCorrecto -> Color.Red
+                        else -> Color.LightGray
+                    }
+
+                    BotonRespuestaApi(
+                        text = respuesta.texto?.takeIf { it.isNotBlank() } ?: "Respuesta",
+                        color = colorBoton,
+                        enabled = respuestaElegida == null,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        onClick(index)
+                    }
+                }
+
+                if (fila.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
 
+/*
+--------------------------------------------------
+Botón de respuesta
+--------------------------------------------------
+*/
 @Composable
-fun Boton(
+fun BotonRespuestaApi(
     text: String,
     color: Color,
+    enabled: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier
-            .height(60.dp),
-        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-            containerColor = color
+        enabled = enabled,
+        modifier = modifier.height(60.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = color,
+            disabledContainerColor = color,
+            contentColor = Color.Black,
+            disabledContentColor = Color.Black
         )
     ) {
         Text(
@@ -283,36 +412,61 @@ fun Boton(
         )
     }
 }
+
+/*
+--------------------------------------------------
+Progreso de preguntas
+--------------------------------------------------
+*/
 @Composable
-fun QuestionProgress(
-    states:List<EstadoRespuesta>,
-    currentIndex:Int
-){
-
+fun QuestionProgressApi(
+    states: List<EstadoRespuesta>
+) {
     Row {
-
         states.forEachIndexed { index, state ->
 
-            val color = when(state){
-
+            val color = when (state) {
                 EstadoRespuesta.CORRECT -> Color.Green
                 EstadoRespuesta.WRONG -> Color.Red
                 EstadoRespuesta.CURRENT -> Color(0xFFFFA500)
-                else -> Color.LightGray
+                EstadoRespuesta.PENDING -> Color.LightGray
             }
 
             Box(
                 modifier = Modifier
                     .size(30.dp)
                     .background(color)
-                    .border(1.dp,Color.Black),
+                    .border(1.dp, Color.Black),
                 contentAlignment = Alignment.Center
-            ){
-
-                Text("${index+1}")
+            ) {
+                Text("${index + 1}")
             }
 
             Spacer(Modifier.width(4.dp))
         }
+    }
+}
+
+/*
+--------------------------------------------------
+Pantalla simple de estado
+--------------------------------------------------
+*/
+@Composable
+fun PantallaEstadoJuego(
+    mensaje: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = mensaje,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
