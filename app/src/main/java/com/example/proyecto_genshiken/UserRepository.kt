@@ -1,5 +1,6 @@
 package com.example.proyecto_genshiken
 
+import android.os.Build
 import okhttp3.ResponseBody
 import org.json.JSONObject
 import retrofit2.Call
@@ -11,12 +12,19 @@ import retrofit2.Response
 Repositorio de datos
 --------------------------------------------------
 
-Este archivo hace de puente entre las pantallas
-de Android y las APIs PHP.
+Este archivo actúa como puente entre las pantallas
+de Android y el backend PHP.
 
-La idea es que las pantallas no llamen directamente
-a Retrofit. Llaman a UserRepository, y este se
-encarga de hablar con el backend.
+Aquí se centralizan las llamadas a:
+- login.php
+- register.php
+- getPreguntas.php
+- guardarPuntuacion.php
+- getRanking.php
+- registrarDescarga.php
+
+La idea es que las pantallas no tengan que saber
+cómo funciona Retrofit por dentro.
 */
 object UserRepository {
 
@@ -24,6 +32,15 @@ object UserRepository {
     --------------------------------------------------
     Login de usuario
     --------------------------------------------------
+
+    Se usa en el modo competitivo.
+
+    La API login.php devuelve un JSON parecido a:
+    {
+        "status": "OK",
+        "id": 1,
+        "nombre": "Hamza"
+    }
     */
     fun login(
         correo: String,
@@ -69,6 +86,11 @@ object UserRepository {
     --------------------------------------------------
     Registro de usuario
     --------------------------------------------------
+
+    La API register.php devuelve texto plano:
+    - OK
+    - EXISTE
+    - ERROR
     */
     fun register(
         nombre: String,
@@ -95,15 +117,14 @@ object UserRepository {
 
     /*
     --------------------------------------------------
-    Obtener preguntas reales desde el backend
+    Obtener preguntas desde MySQL
     --------------------------------------------------
 
-    Esta función llama a:
+    Conecta con:
     getPreguntas.php?nivel=1
 
-    Es una parte clave de la integración porque
-    permite que Android use las preguntas creadas
-    desde el panel admin.
+    Esto permite que la app use las preguntas creadas
+    desde el panel admin web.
     */
     fun getPreguntas(
         nivel: Int = 1,
@@ -134,17 +155,21 @@ object UserRepository {
     Guardar puntuación
     --------------------------------------------------
 
-    Esta función llama a guardarPuntuacion.php.
+    Conecta con:
+    guardarPuntuacion.php
 
-    Se guarda:
+    Envía al backend:
     - nombre del jugador
     - puntos
-    - tiempo
+    - tiempo total
+
+    El backend guarda en la tabla puntuaciones y
+    devuelve posición/top3.
     */
     fun saveScore(
         usuarioId: Int,
         puntuacion: Int,
-        tiempo: Int = 0,
+        tiempo: Int,
         onResult: (Boolean, GuardarPuntuacionResponse?) -> Unit = { _, _ -> }
     ) {
         val nombreJugador = if (UserSession.userName.isNotBlank()) {
@@ -173,7 +198,10 @@ object UserRepository {
                     }
                 }
 
-                override fun onFailure(call: Call<GuardarPuntuacionResponse>, t: Throwable) {
+                override fun onFailure(
+                    call: Call<GuardarPuntuacionResponse>,
+                    t: Throwable
+                ) {
                     onResult(false, null)
                 }
             })
@@ -184,8 +212,14 @@ object UserRepository {
     Obtener ranking
     --------------------------------------------------
 
-    Esta función llama a getRanking.php y adapta
-    el JSON al modelo Player que usa Ranking.kt.
+    Conecta con:
+    getRanking.php
+
+    La API devuelve:
+    posicion, usuario, puntos, tiempo y fecha.
+
+    Aquí convertimos esos datos al modelo Player que
+    usa la pantalla Ranking.kt.
     */
     fun getRanking(
         onResult: (List<Player>) -> Unit
@@ -210,7 +244,10 @@ object UserRepository {
                     onResult(ranking)
                 }
 
-                override fun onFailure(call: Call<List<RankingApiResponse>>, t: Throwable) {
+                override fun onFailure(
+                    call: Call<List<RankingApiResponse>>,
+                    t: Throwable
+                ) {
                     onResult(emptyList())
                 }
             })
@@ -218,21 +255,30 @@ object UserRepository {
 
     /*
     --------------------------------------------------
-    Registrar descarga o uso inicial
+    Registrar descarga / uso inicial de la app
     --------------------------------------------------
+
+    Conecta con:
+    registrarDescarga.php
+
+    Para prácticas lo usamos como registro de uso de app.
+    Se guarda en admin/descargas.php:
+    - usuario
+    - dispositivo
+    - versión
     */
     fun registrarDescarga(
         nombreUsuario: String,
-        dispositivo: String,
-        versionApp: String,
         usuarioId: Int? = null,
         onResult: (Boolean, String) -> Unit = { _, _ -> }
     ) {
+        val dispositivo = obtenerNombreDispositivo()
+
         val datos = RegistrarDescargaRequest(
             usuario_id = usuarioId,
             nombre_usuario = if (nombreUsuario.isBlank()) "Anónimo" else nombreUsuario,
             dispositivo = dispositivo,
-            version_app = versionApp
+            version_app = "1.0.0"
         )
 
         RetrofitClient.api.registrarDescarga(datos)
@@ -247,20 +293,47 @@ object UserRepository {
                     if (response.isSuccessful && body != null) {
                         onResult(body.ok, body.mensaje)
                     } else {
-                        onResult(false, "No se pudo registrar la descarga.")
+                        onResult(false, "No se pudo registrar el uso de la app.")
                     }
                 }
 
-                override fun onFailure(call: Call<ApiSimpleResponse>, t: Throwable) {
-                    onResult(false, "Error de conexión con el backend.")
+                override fun onFailure(
+                    call: Call<ApiSimpleResponse>,
+                    t: Throwable
+                ) {
+                    onResult(false, "Error de conexión con registrarDescarga.php.")
                 }
             })
     }
 
     /*
     --------------------------------------------------
+    Obtener nombre del dispositivo
+    --------------------------------------------------
+
+    Esto genera algo tipo:
+    Google Pixel 5
+    Samsung SM-A546B
+    Xiaomi Redmi Note 12
+    */
+    private fun obtenerNombreDispositivo(): String {
+        val fabricante = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
+        val modelo = Build.MODEL
+
+        return if (modelo.startsWith(fabricante, ignoreCase = true)) {
+            modelo
+        } else {
+            "$fabricante $modelo"
+        }
+    }
+
+    /*
+    --------------------------------------------------
     Cambio de nombre
     --------------------------------------------------
+
+    Se mantiene para no romper la pantalla antigua
+    de cambio de nombre.
     */
     fun changeName(
         nombreActual: String,
