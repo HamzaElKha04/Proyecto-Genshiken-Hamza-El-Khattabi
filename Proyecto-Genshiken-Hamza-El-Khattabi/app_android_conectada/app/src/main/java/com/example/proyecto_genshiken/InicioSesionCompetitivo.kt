@@ -28,20 +28,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 
+/*
+--------------------------------------------------
+Pantalla de inicio de sesión competitivo
+--------------------------------------------------
+
+Esta pantalla permite iniciar sesión contra el
+backend PHP.
+
+Cuando el login es correcto:
+- se guarda el id y nombre en UserSession
+- se registra el uso/descarga de la app
+- se navega al juego
+
+Esto demuestra la conexión:
+Android → login.php → MySQL
+Android → registrarDescarga.php → MySQL
+*/
 @Composable
 fun InicioCompetitivo(navController: NavHostController) {
 
-    var email by remember {
-        mutableStateOf("")
-    }
-
-    var contraseña by remember {
-        mutableStateOf("")
-    }
-
-    var mensajeError by remember {
-        mutableStateOf("")
-    }
+    var email by remember { mutableStateOf("") }
+    var contraseña by remember { mutableStateOf("") }
+    var mensajeError by remember { mutableStateOf("") }
+    var cargando by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -95,7 +105,6 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Textfield para poner el Email
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -106,7 +115,6 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Textfield para ppner la contraseña
                 OutlinedTextField(
                     value = contraseña,
                     onValueChange = { contraseña = it },
@@ -120,31 +128,47 @@ fun InicioCompetitivo(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
+                    enabled = !cargando,
                     onClick = {
+
+                        if (email.isBlank() || contraseña.isBlank()) {
+                            mensajeError = "No pueden haber campos sin información"
+                            return@Button
+                        }
+
+                        cargando = true
+                        mensajeError = ""
 
                         UserRepository.login(email, contraseña) { success, id, nombre ->
 
-                            if (success) {
+                            cargando = false
 
+                            if (success) {
                                 UserSession.userId = id
                                 UserSession.userName = nombre
 
+                                /*
+                                --------------------------------------------------
+                                Registro de uso/descarga
+                                --------------------------------------------------
+
+                                No bloqueamos la navegación aunque falle.
+                                Si falla, el usuario puede jugar igualmente.
+                                */
+                                UserRepository.registrarDescarga(
+                                    nombreUsuario = nombre,
+                                    usuarioId = id
+                                )
+
                                 navController.navigate("Juego")
-
-                            }
-                            else if(email.isBlank() || contraseña.isBlank()){
-                                mensajeError="no pueden haber campos sin información"
-                            }
-
-                            else {
+                            } else {
                                 mensajeError = "Correo o contraseña incorrectos"
                             }
                         }
-
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Enviar")
+                    Text(if (cargando) "Comprobando..." else "Enviar")
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
