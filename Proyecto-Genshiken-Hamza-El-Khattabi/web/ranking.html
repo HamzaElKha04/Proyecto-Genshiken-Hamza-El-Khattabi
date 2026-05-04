@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--
+--------------------------------------------------
+Pantalla de ranking (Frontend)
+--------------------------------------------------
+
+Muestra el TOP 10 de jugadores con:
+- posición
+- nombre
+- puntos
+- tiempo
+
+Se conecta a la API getRanking.php
+-->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking - Genshiken</title>
+    <link rel="stylesheet" href="css/juego.css">
+</head>
+<body>
+
+<div class="contenedor-juego">
+    <h1>Ranking Global</h1>
+
+    <div class="caja-juego">
+        <div id="estado" class="estado">Cargando ranking...</div>
+
+        <div id="ranking-contenido" style="display:none;">
+            <table class="tabla-ranking" id="tabla-ranking">
+                <thead>
+                    <tr>
+                        <th>Posición</th>
+                        <th>Jugador</th>
+                        <th>Puntos</th>
+                        <th>Tiempo</th>
+                    </tr>
+                </thead>
+                <tbody id="ranking-body"></tbody>
+            </table>
+
+            <div class="acciones-juego">
+                <button onclick="window.location.href='juego.html'" class="btn-siguiente">
+                    Volver al juego
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/ranking.js"></script>
+</body>
+</html>

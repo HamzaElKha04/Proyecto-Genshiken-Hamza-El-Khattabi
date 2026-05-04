@@ -1,0 +1,293 @@
+/*
+--------------------------------------------------
+Estilos del juego y ranking (Frontend)
+--------------------------------------------------
+*/
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f4f6f9;
+    color: #222;
+}
+
+.contenedor-juego {
+    max-width: 950px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.contenedor-juego h1 {
+    color: #1f3c88;
+    margin-bottom: 10px;
+}
+
+.info-superior {
+    margin-bottom: 20px;
+}
+
+#jugador-texto,
+#puntos-texto,
+#tiempo-texto,
+#fallos-texto {
+    font-weight: bold;
+    color: #1f3c88;
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.caja-juego {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    padding: 25px;
+}
+
+.pantalla-inicio {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.bloque-inicio {
+    text-align: center;
+}
+
+.bloque-inicio h2 {
+    color: #1f3c88;
+    margin-bottom: 10px;
+    font-size: 28px;
+}
+
+.texto-inicio {
+    color: #555;
+    font-size: 17px;
+    margin-bottom: 24px;
+}
+
+.campo-inicio {
+    max-width: 420px;
+    margin: 0 auto 16px auto;
+    text-align: left;
+}
+
+.campo-inicio label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #1f3c88;
+}
+
+.campo-inicio input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #cfd8e3;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+}
+
+.campo-inicio input:focus {
+    border-color: #1f3c88;
+    box-shadow: 0 0 0 3px rgba(31, 60, 136, 0.08);
+}
+
+.error-inicio {
+    max-width: 420px;
+    margin: 0 auto 12px auto;
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #dc3545;
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: left;
+}
+
+.estado {
+    font-size: 18px;
+    color: #1f3c88;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.estado-final h2 {
+    margin-bottom: 12px;
+    font-size: 22px;
+}
+
+.estado-final p {
+    margin-bottom: 8px;
+    font-size: 18px;
+}
+
+.mensaje-top {
+    color: #b8860b;
+    font-weight: bold;
+    font-size: 20px;
+    margin-top: 10px;
+    margin-bottom: 18px;
+}
+
+.mensaje-error-final {
+    color: #b00020;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.cabecera-pregunta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.nivel {
+    display: inline-block;
+    background: #1f3c88;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.contador {
+    color: #666;
+    font-weight: bold;
+}
+
+#pregunta-texto {
+    margin-bottom: 20px;
+    color: #222;
+    line-height: 1.4;
+    font-size: 24px;
+}
+
+.imagen-pregunta-box {
+    margin-bottom: 25px;
+}
+
+#pregunta-imagen {
+    max-width: 100%;
+    width: 320px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    display: none;
+    background: #fff;
+    margin-bottom: 20px;
+}
+
+.respuestas-box {
+    display: grid;
+    gap: 12px;
+}
+
+.respuesta-btn {
+    background: #eef2f7;
+    border: 1px solid #d9e0ea;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.2s;
+    width: 100%;
+}
+
+.respuesta-btn:hover {
+    background: #dfe8f5;
+}
+
+.respuesta-btn:disabled {
+    cursor: default;
+}
+
+.respuesta-correcta {
+    background: #d4edda !important;
+    border-color: #28a745 !important;
+    color: #155724;
+    font-weight: bold;
+}
+
+.respuesta-incorrecta {
+    background: #f8d7da !important;
+    border-color: #dc3545 !important;
+    color: #721c24;
+    font-weight: bold;
+}
+
+.resultado {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    min-height: 24px;
+}
+
+.acciones-juego {
+    margin-top: 15px;
+}
+
+.btn-siguiente {
+    background: #1f3c88;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.btn-siguiente:hover {
+    background: #162d66;
+}
+
+/* ------------------------- */
+/* TABLA RANKING FRONTEND */
+/* ------------------------- */
+
+.tabla-ranking {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.tabla-ranking th {
+    background: #1f3c88;
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+.tabla-ranking td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tabla-ranking tr:hover {
+    background: #f8f9fa;
+}
+
+@media (max-width: 768px) {
+    .contenedor-juego {
+        margin: 20px auto;
+        padding: 14px;
+    }
+
+    .caja-juego {
+        padding: 18px;
+    }
+
+    #pregunta-texto {
+        font-size: 20px;
+    }
+
+    .tabla-ranking {
+        display: block;
+        overflow-x: auto;
+    }
+}

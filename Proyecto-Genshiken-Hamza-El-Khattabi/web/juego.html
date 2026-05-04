@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!--
+--------------------------------------------------
+Interfaz principal del juego (Frontend)
+--------------------------------------------------
+
+Este archivo define la estructura visual del juego
+de trivia.
+
+Ahora incluye:
+- pantalla inicial antes de comenzar
+- input para nombre del jugador
+- botón JUGAR
+- panel del juego
+- panel final con resultado
+
+El contenido se rellena dinámicamente mediante
+JavaScript (juego.js), que obtiene los datos desde
+la API y guarda la puntuación final.
+-->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia Genshiken - Juego</title>
+    <link rel="stylesheet" href="css/juego.css">
+</head>
+<body>
+
+<div class="contenedor-juego">
+    <h1>Trivia Genshiken</h1>
+
+    <div id="pantalla-inicio" class="caja-juego pantalla-inicio">
+        <div class="bloque-inicio">
+            <h2>Comenzar partida</h2>
+            <p class="texto-inicio">
+                Introduce tu nombre para empezar la trivia.
+            </p>
+
+            <div class="campo-inicio">
+                <label for="nombre-jugador">Nombre del jugador</label>
+                <input
+                    type="text"
+                    id="nombre-jugador"
+                    maxlength="100"
+                    placeholder="Escribe tu nombre"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div id="error-nombre" class="error-inicio" style="display: none;"></div>
+
+            <div class="acciones-juego">
+                <button id="btn-jugar" class="btn-siguiente">JUGAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="panel-juego" style="display:none;">
+        <div class="info-superior">
+            <p id="jugador-texto">Jugador: -</p>
+            <p id="puntos-texto">Puntos: 0</p>
+            <p id="tiempo-texto">Tiempo: 0s</p>
+            <p id="fallos-texto">Fallos: 0 / 5</p>
+        </div>
+
+        <div class="caja-juego">
+            <div id="estado" class="estado">Pulsa JUGAR para comenzar.</div>
+
+            <div id="pregunta-box" style="display:none;">
+                <div class="cabecera-pregunta">
+                    <span class="nivel" id="nivel-texto">Nivel 1</span>
+                    <span class="contador" id="contador-texto"></span>
+                </div>
+
+                <h2 id="pregunta-texto"></h2>
+
+                <div class="imagen-pregunta-box">
+                    <img id="pregunta-imagen" src="" alt="Imagen de la pregunta" style="display:none;">
+                </div>
+
+                <div id="respuestas-box" class="respuestas-box"></div>
+
+                <div id="resultado" class="resultado"></div>
+
+                <div class="acciones-juego">
+                    <button id="btn-siguiente" class="btn-siguiente" style="display:none;">
+                        Siguiente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/juego.js"></script>
+</body>
+</html>
