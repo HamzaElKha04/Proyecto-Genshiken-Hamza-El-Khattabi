@@ -149,7 +149,7 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                                 /*
                                 --------------------------------------------------
-                                Registro de uso/descarga
+                                Registro de uso/descarga PRUEBA
                                 --------------------------------------------------
 
                                 No bloqueamos la navegación aunque falle.
