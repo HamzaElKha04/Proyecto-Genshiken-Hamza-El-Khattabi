@@ -1,5 +1,4 @@
 package com.example.proyecto_genshiken
-
 /*
 --------------------------------------------------
 Modelos de datos de la app

@@ -32,36 +32,70 @@ import androidx.navigation.NavController
 Pantalla de ranking
 --------------------------------------------------
 
-Esta pantalla ya no usa datos inventados.
-Carga el TOP 10 real desde getRanking.php.
+Esta pantalla muestra el ranking real de la app.
 
-El backend ordena por:
-- puntos DESC
-- tiempo ASC
-- fecha ASC
+Antes el ranking podía funcionar con datos locales
+o de prueba. Ahora se conecta al backend PHP mediante
+UserRepository.getRanking(), que llama a getRanking.php.
 
-Por eso aquí respetamos el orden que llega desde PHP.
+Flujo:
+Android Ranking.kt
+    -> UserRepository.getRanking()
+    -> ApiService.getRanking()
+    -> getRanking.php
+    -> tabla puntuaciones en MySQL
+
+El orden del ranking lo decide el backend:
+- más puntos primero
+- si hay empate, menos tiempo primero
+- si sigue el empate, fecha más antigua primero
 */
 @Composable
 fun Ranking(navController: NavController) {
 
+    /*
+    --------------------------------------------------
+    Estado de pantalla
+    --------------------------------------------------
+
+    ranking:
+    Lista de jugadores recibida desde la API.
+
+    cargando:
+    Controla si todavía estamos esperando respuesta
+    del backend.
+    */
     var ranking by remember { mutableStateOf<List<Player>>(emptyList()) }
     var cargando by remember { mutableStateOf(true) }
 
     /*
     --------------------------------------------------
-    Cargar ranking real desde PHP
+    Carga inicial del ranking
     --------------------------------------------------
+
+    LaunchedEffect(Unit) se ejecuta una vez al abrir
+    la pantalla.
+
+    Aquí pedimos el ranking real al backend.
     */
     LaunchedEffect(Unit) {
-        UserRepository.getRanking {
-            ranking = it
+        UserRepository.getRanking { listaRanking ->
+            ranking = listaRanking
             cargando = false
         }
     }
 
-    val usuarioActual = ranking.firstOrNull {
-        it.nombre.equals(UserSession.userName, ignoreCase = true)
+    /*
+    --------------------------------------------------
+    Buscar posición del usuario actual
+    --------------------------------------------------
+
+    Se usa el nombre guardado en UserSession tras login.
+    Si el usuario aparece en el ranking, se muestra abajo
+    en "Tu posición".
+    */
+    val usuarioActual = ranking.firstOrNull { jugador ->
+        jugador.nombre.equals(UserSession.userName, ignoreCase = true)
     }
 
     Column(
@@ -71,7 +105,7 @@ fun Ranking(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         Text(
             text = "RANKING",
@@ -79,23 +113,34 @@ fun Ranking(navController: NavController) {
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
+        /*
+        --------------------------------------------------
+        Estado cargando
+        --------------------------------------------------
+        */
         if (cargando) {
-            Text("Cargando ranking...")
+            Text(text = "Cargando ranking...")
             return@Column
         }
 
+        /*
+        --------------------------------------------------
+        Ranking vacío
+        --------------------------------------------------
+        */
         if (ranking.isEmpty()) {
-            Text("No hay puntuaciones registradas.")
-            Spacer(Modifier.height(20.dp))
+            Text(text = "No hay puntuaciones registradas.")
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             Button(
                 onClick = {
                     navController.navigate("inicio")
                 }
             ) {
-                Text("Volver al inicio")
+                Text(text = "Volver al inicio")
             }
 
             return@Column
@@ -110,25 +155,49 @@ fun Ranking(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Puesto", Modifier.weight(1f), fontWeight = FontWeight.Bold)
-            Text("Nombre", Modifier.weight(2f), fontWeight = FontWeight.Bold)
-            Text("Puntos", Modifier.weight(1f), fontWeight = FontWeight.Bold)
-            Text("Tiempo", Modifier.weight(1f), fontWeight = FontWeight.Bold)
+            Text(
+                text = "Puesto",
+                modifier = Modifier.weight(1f),
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "Nombre",
+                modifier = Modifier.weight(2f),
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "Puntos",
+                modifier = Modifier.weight(1f),
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "Tiempo",
+                modifier = Modifier.weight(1f),
+                fontWeight = FontWeight.Bold
+            )
         }
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         /*
         --------------------------------------------------
-        TOP 10
+        Listado del TOP ranking
         --------------------------------------------------
+
+        Los tres primeros puestos se resaltan:
+        1º oro
+        2º plata
+        3º bronce
         */
         LazyColumn(
             modifier = Modifier.weight(1f)
         ) {
-            items(ranking) { player ->
+            items(items = ranking) { jugador ->
 
-                val color = when (player.posicion) {
+                val colorFila = when (jugador.posicion) {
                     1 -> Color(0xFFFFD700)
                     2 -> Color(0xFFC0C0C0)
                     3 -> Color(0xFFCD7F32)
@@ -138,18 +207,33 @@ fun Ranking(navController: NavController) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(color)
+                        .background(colorFila)
                         .padding(8.dp)
                 ) {
-                    Text("${player.posicion}", Modifier.weight(1f))
-                    Text(player.nombre, Modifier.weight(2f))
-                    Text("${player.puntuacion}", Modifier.weight(1f))
-                    Text("${player.tiempo}s", Modifier.weight(1f))
+                    Text(
+                        text = jugador.posicion.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Text(
+                        text = jugador.nombre,
+                        modifier = Modifier.weight(2f)
+                    )
+
+                    Text(
+                        text = jugador.puntuacion.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Text(
+                        text = "${jugador.tiempo}s",
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         /*
         --------------------------------------------------
@@ -162,7 +246,7 @@ fun Ranking(navController: NavController) {
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         if (usuarioActual != null) {
             Row(
@@ -171,23 +255,38 @@ fun Ranking(navController: NavController) {
                     .background(Color.Cyan)
                     .padding(8.dp)
             ) {
-                Text("${usuarioActual.posicion}", Modifier.weight(1f))
-                Text(usuarioActual.nombre, Modifier.weight(2f))
-                Text("${usuarioActual.puntuacion}", Modifier.weight(1f))
-                Text("${usuarioActual.tiempo}s", Modifier.weight(1f))
+                Text(
+                    text = usuarioActual.posicion.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    text = usuarioActual.nombre,
+                    modifier = Modifier.weight(2f)
+                )
+
+                Text(
+                    text = usuarioActual.puntuacion.toString(),
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    text = "${usuarioActual.tiempo}s",
+                    modifier = Modifier.weight(1f)
+                )
             }
         } else {
-            Text("Todavía no tienes puntuación registrada.")
+            Text(text = "Todavía no tienes puntuación registrada.")
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = {
                 navController.navigate("inicio")
             }
         ) {
-            Text("Volver al inicio")
+            Text(text = "Volver al inicio")
         }
     }
 }
