@@ -1,21 +1,20 @@
 <?php
 /*
 --------------------------------------------------
-Panel de administración - Accesos a la app
+Panel de administración - Instalaciones de la app
 --------------------------------------------------
 
-Esta página muestra los accesos registrados desde
-la aplicación Android.
+Esta página muestra las instalaciones o primeros
+usos detectados desde la aplicación Android.
 
 IMPORTANTE:
 Aunque internamente la tabla se llama "descargas",
-esta sección realmente registra usos/inicios de sesión
-de la app, no descargas reales de la APK.
+esta sección realmente representa instalaciones
+detectadas por la app, no descargas directas de
+Google Play.
 
-Permite:
-- ver todos los accesos registrados
-- buscar por nombre de usuario o dispositivo
-- consultar fecha, dispositivo y versión de la app
+La app registra una instalación cuando un usuario
+inicia sesión por primera vez desde un dispositivo.
 */
 
 require_once "config.php";
@@ -32,25 +31,54 @@ $conexion = conectarDB();
 $busqueda = trim($_GET["busqueda"] ?? "");
 $likeBusqueda = "%" . $busqueda . "%";
 
-/* Resúmenes superiores de la sección */
-$totalAccesos = 0;
+/* Resúmenes superiores */
+$totalInstalaciones = 0;
 $totalUsuarios = 0;
-$accesosEncontrados = 0;
+$totalDispositivos = 0;
+$resultadosEncontrados = 0;
 
-/* Total de accesos registrados */
-$resultadoTotal = $conexion->query("SELECT COUNT(*) AS total FROM descargas");
+/*
+--------------------------------------------------
+Total de instalaciones únicas
+--------------------------------------------------
+
+Agrupamos por usuario + dispositivo + versión para
+evitar contar varias veces el mismo móvil si el
+usuario inicia sesión muchas veces.
+*/
+$resultadoTotal = $conexion->query("
+    SELECT COUNT(*) AS total
+    FROM (
+        SELECT nombre_usuario, dispositivo, version_app
+        FROM descargas
+        GROUP BY nombre_usuario, dispositivo, version_app
+    ) AS instalaciones_unicas
+");
+
 if ($resultadoTotal && $filaTotal = $resultadoTotal->fetch_assoc()) {
-    $totalAccesos = (int)$filaTotal["total"];
+    $totalInstalaciones = (int)$filaTotal["total"];
 }
 
-/* Total de nombres de usuario distintos */
+/* Usuarios distintos registrados en instalaciones */
 $resultadoUsuarios = $conexion->query("
     SELECT COUNT(DISTINCT nombre_usuario) AS total
     FROM descargas
     WHERE nombre_usuario IS NOT NULL AND nombre_usuario <> ''
 ");
+
 if ($resultadoUsuarios && $filaUsuarios = $resultadoUsuarios->fetch_assoc()) {
     $totalUsuarios = (int)$filaUsuarios["total"];
+}
+
+/* Dispositivos distintos registrados */
+$resultadoDispositivos = $conexion->query("
+    SELECT COUNT(DISTINCT dispositivo) AS total
+    FROM descargas
+    WHERE dispositivo IS NOT NULL AND dispositivo <> ''
+");
+
+if ($resultadoDispositivos && $filaDispositivos = $resultadoDispositivos->fetch_assoc()) {
+    $totalDispositivos = (int)$filaDispositivos["total"];
 }
 
 /*
@@ -58,15 +86,23 @@ if ($resultadoUsuarios && $filaUsuarios = $resultadoUsuarios->fetch_assoc()) {
 Consulta principal
 --------------------------------------------------
 
-Si hay búsqueda, filtra por nombre o dispositivo.
-Si no hay búsqueda, muestra todos los accesos.
+Mostramos una sola fila por usuario + dispositivo + versión.
+Si ya hay registros antiguos duplicados, aquí se agrupan
+para que el panel se vea limpio.
 */
 if ($busqueda !== "") {
     $sql = "
-        SELECT id, usuario_id, nombre_usuario, dispositivo, version_app, fecha_descarga
+        SELECT
+            MIN(id) AS id,
+            MIN(usuario_id) AS usuario_id,
+            nombre_usuario,
+            dispositivo,
+            version_app,
+            MIN(fecha_descarga) AS fecha_primer_uso
         FROM descargas
         WHERE nombre_usuario LIKE ? OR dispositivo LIKE ?
-        ORDER BY fecha_descarga DESC, id DESC
+        GROUP BY nombre_usuario, dispositivo, version_app
+        ORDER BY fecha_primer_uso DESC, id DESC
     ";
 
     $stmt = $conexion->prepare($sql);
@@ -80,27 +116,33 @@ if ($busqueda !== "") {
     $resultado = $stmt->get_result();
 } else {
     $sql = "
-        SELECT id, usuario_id, nombre_usuario, dispositivo, version_app, fecha_descarga
+        SELECT
+            MIN(id) AS id,
+            MIN(usuario_id) AS usuario_id,
+            nombre_usuario,
+            dispositivo,
+            version_app,
+            MIN(fecha_descarga) AS fecha_primer_uso
         FROM descargas
-        ORDER BY fecha_descarga DESC, id DESC
+        GROUP BY nombre_usuario, dispositivo, version_app
+        ORDER BY fecha_primer_uso DESC, id DESC
     ";
 
     $resultado = $conexion->query($sql);
 
     if (!$resultado) {
-        die("Error al cargar los accesos: " . $conexion->error);
+        die("Error al cargar las instalaciones: " . $conexion->error);
     }
 }
 
-/* Número de accesos que se van a mostrar */
-$accesosEncontrados = $resultado ? $resultado->num_rows : 0;
+$resultadosEncontrados = $resultado ? $resultado->num_rows : 0;
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accesos a la app - Panel Admin</title>
+    <title>Instalaciones de la app - Panel Admin</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .contenedor-descargas {
@@ -278,18 +320,17 @@ $accesosEncontrados = $resultado ? $resultado->num_rows : 0;
 
 <div class="contenedor-descargas">
     <div class="cabecera-descargas">
-        <h1>Accesos a la app</h1>
+        <h1>Instalaciones de la app</h1>
 
         <div class="acciones">
             <a href="dashboard.php" class="btn-azul">Volver al dashboard</a>
         </div>
     </div>
 
-    <!-- Tarjetas resumen de la sección -->
     <div class="resumen">
         <div class="card-resumen">
-            <h3>Total accesos</h3>
-            <p><?php echo $totalAccesos; ?></p>
+            <h3>Total instalaciones</h3>
+            <p><?php echo $totalInstalaciones; ?></p>
         </div>
 
         <div class="card-resumen">
@@ -298,12 +339,16 @@ $accesosEncontrados = $resultado ? $resultado->num_rows : 0;
         </div>
 
         <div class="card-resumen">
+            <h3>Dispositivos registrados</h3>
+            <p><?php echo $totalDispositivos; ?></p>
+        </div>
+
+        <div class="card-resumen">
             <h3>Resultados encontrados</h3>
-            <p><?php echo $accesosEncontrados; ?></p>
+            <p><?php echo $resultadosEncontrados; ?></p>
         </div>
     </div>
 
-    <!-- Buscador por nombre de usuario o dispositivo -->
     <div class="buscador-box">
         <form method="GET" action="descargas.php">
             <label for="busqueda">Buscar por usuario o dispositivo</label>
@@ -335,7 +380,7 @@ $accesosEncontrados = $resultado ? $resultado->num_rows : 0;
                             <th>Usuario</th>
                             <th>Dispositivo</th>
                             <th>Versión app</th>
-                            <th>Fecha de acceso</th>
+                            <th>Fecha de primer uso</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -361,7 +406,7 @@ $accesosEncontrados = $resultado ? $resultado->num_rows : 0;
                                 <td class="nombre-usuario"><?php echo htmlspecialchars($nombreUsuario, ENT_QUOTES, "UTF-8"); ?></td>
                                 <td><?php echo htmlspecialchars($dispositivo, ENT_QUOTES, "UTF-8"); ?></td>
                                 <td><?php echo htmlspecialchars($versionApp, ENT_QUOTES, "UTF-8"); ?></td>
-                                <td><?php echo htmlspecialchars($fila["fecha_descarga"], ENT_QUOTES, "UTF-8"); ?></td>
+                                <td><?php echo htmlspecialchars($fila["fecha_primer_uso"], ENT_QUOTES, "UTF-8"); ?></td>
                             </tr>
                         <?php endwhile; ?>
                     </tbody>
@@ -370,7 +415,7 @@ $accesosEncontrados = $resultado ? $resultado->num_rows : 0;
         </div>
     <?php else: ?>
         <div class="sin-datos">
-            No hay accesos registrados.
+            No hay instalaciones registradas.
         </div>
     <?php endif; ?>
 </div>

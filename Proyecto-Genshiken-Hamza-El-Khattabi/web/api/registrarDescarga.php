@@ -1,25 +1,21 @@
 <?php
 /*
 --------------------------------------------------
-API - Registrar acceso a la app
+API - Registrar instalación / primer uso de la app
 --------------------------------------------------
 
-Este archivo registra un acceso o uso inicial de la
-app Android.
+Este archivo registra una instalación detectada
+desde la app Android.
 
 IMPORTANTE:
 El archivo se sigue llamando registrarDescarga.php
 para no romper la conexión con Android, pero su uso
-real es registrar accesos/inicios de sesión.
+real es registrar el primer uso de la app en un
+dispositivo concreto.
 
-Datos que recibe:
-- usuario_id
-- nombre_usuario
-- dispositivo
-- version_app
-
-Luego estos datos se muestran en el panel admin,
-en la sección "Accesos a la app".
+No registra cada inicio de sesión.
+Solo crea una fila si no existe ya una instalación
+para ese usuario + dispositivo + versión.
 */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -29,14 +25,7 @@ require_once "../admin/config.php";
 $conexion = conectarDB();
 $conexion->set_charset("utf8mb4");
 
-/*
---------------------------------------------------
-Lectura de datos recibidos
---------------------------------------------------
-
-Primero intenta leer JSON.
-Si no llega JSON, usa POST normal.
-*/
+/* Leer JSON o POST normal */
 $datos = json_decode(file_get_contents("php://input"), true);
 
 if (!is_array($datos)) {
@@ -49,12 +38,16 @@ $nombreUsuario = trim($datos["nombre_usuario"] ?? "Anónimo");
 $dispositivo = trim($datos["dispositivo"] ?? "");
 $versionApp = trim($datos["version_app"] ?? "");
 
-/* Si no llega nombre, se guarda como Anónimo */
+/* Valores por defecto */
 if ($nombreUsuario === "") {
     $nombreUsuario = "Anónimo";
 }
 
-/* El dispositivo es obligatorio para que el registro tenga sentido */
+if ($versionApp === "") {
+    $versionApp = "No indicada";
+}
+
+/* El dispositivo es obligatorio */
 if ($dispositivo === "") {
     echo json_encode([
         "ok" => false,
@@ -65,11 +58,74 @@ if ($dispositivo === "") {
 
 /*
 --------------------------------------------------
-Inserción en base de datos
+Comprobar instalación existente
 --------------------------------------------------
 
-La tabla mantiene el nombre "descargas" por compatibilidad,
-pero funcionalmente representa accesos o usos de la app.
+Si el mismo usuario entra desde el mismo dispositivo
+y la misma versión, no se vuelve a insertar.
+
+Esto evita duplicados al iniciar sesión varias veces.
+*/
+if ($usuarioId !== null) {
+    $stmtExiste = $conexion->prepare("
+        SELECT id
+        FROM descargas
+        WHERE usuario_id = ?
+          AND dispositivo = ?
+          AND version_app = ?
+        LIMIT 1
+    ");
+
+    if (!$stmtExiste) {
+        echo json_encode([
+            "ok" => false,
+            "mensaje" => "Error al comprobar la instalación."
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $stmtExiste->bind_param("iss", $usuarioId, $dispositivo, $versionApp);
+} else {
+    $stmtExiste = $conexion->prepare("
+        SELECT id
+        FROM descargas
+        WHERE nombre_usuario = ?
+          AND dispositivo = ?
+          AND version_app = ?
+        LIMIT 1
+    ");
+
+    if (!$stmtExiste) {
+        echo json_encode([
+            "ok" => false,
+            "mensaje" => "Error al comprobar la instalación."
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $stmtExiste->bind_param("sss", $nombreUsuario, $dispositivo, $versionApp);
+}
+
+$stmtExiste->execute();
+$resultadoExiste = $stmtExiste->get_result();
+
+if ($resultadoExiste && $resultadoExiste->num_rows > 0) {
+    $stmtExiste->close();
+
+    echo json_encode([
+        "ok" => true,
+        "registrada" => false,
+        "mensaje" => "La instalación ya estaba registrada."
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$stmtExiste->close();
+
+/*
+--------------------------------------------------
+Insertar nueva instalación
+--------------------------------------------------
 */
 $stmt = $conexion->prepare("
     INSERT INTO descargas (usuario_id, nombre_usuario, dispositivo, version_app)
@@ -79,23 +135,24 @@ $stmt = $conexion->prepare("
 if (!$stmt) {
     echo json_encode([
         "ok" => false,
-        "mensaje" => "Error al preparar el registro de acceso."
+        "mensaje" => "Error al preparar el registro de instalación."
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 $stmt->bind_param("isss", $usuarioId, $nombreUsuario, $dispositivo, $versionApp);
 
-/* Respuesta JSON para Android */
 if ($stmt->execute()) {
     echo json_encode([
         "ok" => true,
-        "mensaje" => "Acceso registrado correctamente."
+        "registrada" => true,
+        "mensaje" => "Instalación registrada correctamente."
     ], JSON_UNESCAPED_UNICODE);
 } else {
     echo json_encode([
         "ok" => false,
-        "mensaje" => "No se pudo registrar el acceso."
+        "registrada" => false,
+        "mensaje" => "No se pudo registrar la instalación."
     ], JSON_UNESCAPED_UNICODE);
 }
 

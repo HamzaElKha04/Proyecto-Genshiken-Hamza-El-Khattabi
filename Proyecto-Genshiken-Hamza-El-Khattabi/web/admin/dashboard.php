@@ -10,7 +10,7 @@ Incluye estadísticas generales del sistema como:
 - Total de preguntas
 - Total de respuestas
 - Total de niveles
-- Total de accesos a la app
+- Total de instalaciones detectadas de la app
 
 Además permite acceder a las diferentes secciones
 del panel de administración.
@@ -42,17 +42,29 @@ $totalNiveles = (int)$conexion->query("
 
 /*
 --------------------------------------------------
-Total de accesos a la app
+Total de instalaciones únicas
 --------------------------------------------------
 
-Aunque la tabla se llama "descargas", realmente se
-usa para registrar accesos/uso de la app Android.
+Aunque la tabla se llama "descargas", se usa para
+registrar instalaciones o primeros usos detectados
+desde la app Android.
+
+Se agrupa por usuario + dispositivo + versión para
+no contar varias veces el mismo login.
 */
-$totalAccesos = 0;
-$resultadoAccesos = $conexion->query("SELECT COUNT(*) as total FROM descargas");
-if ($resultadoAccesos) {
-    $filaAccesos = $resultadoAccesos->fetch_assoc();
-    $totalAccesos = (int)$filaAccesos["total"];
+$totalInstalaciones = 0;
+$resultadoInstalaciones = $conexion->query("
+    SELECT COUNT(*) AS total
+    FROM (
+        SELECT nombre_usuario, dispositivo, version_app
+        FROM descargas
+        GROUP BY nombre_usuario, dispositivo, version_app
+    ) AS instalaciones_unicas
+");
+
+if ($resultadoInstalaciones) {
+    $filaInstalaciones = $resultadoInstalaciones->fetch_assoc();
+    $totalInstalaciones = (int)$filaInstalaciones["total"];
 }
 ?>
 
@@ -77,7 +89,6 @@ if ($resultadoAccesos) {
 
 <main class="dashboard-container">
 
-    <!-- Tarjetas resumen principales del panel -->
     <div class="card">
         <h2>Total preguntas</h2>
         <p style="font-size: 28px; font-weight: bold;">
@@ -99,7 +110,6 @@ if ($resultadoAccesos) {
         </p>
     </div>
 
-    <!-- Acceso a usuarios registrados -->
     <div class="card">
         <h2>Usuarios registrados</h2>
         <p>Sección para visualizar los usuarios de la aplicación.</p>
@@ -108,7 +118,6 @@ if ($resultadoAccesos) {
         </a>
     </div>
 
-    <!-- Acceso a gestión de preguntas -->
     <div class="card">
         <h2>Preguntas y respuestas</h2>
         <p>Sección para gestionar las preguntas del juego.</p>
@@ -117,7 +126,6 @@ if ($resultadoAccesos) {
         </a>
     </div>
 
-    <!-- Acceso al ranking actual -->
     <div class="card">
         <h2>Ranking</h2>
         <p>Sección para consultar el ranking.</p>
@@ -126,12 +134,11 @@ if ($resultadoAccesos) {
         </a>
     </div>
 
-    <!-- Acceso al registro de accesos de la app -->
     <div class="card">
-        <h2>Accesos a la app</h2>
-        <p>Total registrados: <strong><?php echo $totalAccesos; ?></strong></p>
+        <h2>Instalaciones de la app</h2>
+        <p>Total registradas: <strong><?php echo $totalInstalaciones; ?></strong></p>
         <a href="descargas.php" style="text-decoration:none;">
-            <button>Ver accesos</button>
+            <button>Ver instalaciones</button>
         </a>
     </div>
 
