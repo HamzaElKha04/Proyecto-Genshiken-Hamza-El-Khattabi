@@ -3,7 +3,6 @@
 --------------------------------------------------
 Panel de administración - Ver respuestas
 --------------------------------------------------
-PRUEBASS
 Esta página permite consultar las respuestas
 asociadas a una pregunta concreta del juego.
 

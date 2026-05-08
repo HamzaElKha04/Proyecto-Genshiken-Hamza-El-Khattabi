@@ -10,7 +10,7 @@ Incluye estadísticas generales del sistema como:
 - Total de preguntas
 - Total de respuestas
 - Total de niveles
-- Total de descargas
+- Total de accesos a la app
 
 Además permite acceder a las diferentes secciones
 del panel de administración.
@@ -40,12 +40,19 @@ $totalNiveles = (int)$conexion->query("
     FROM preguntas
 ")->fetch_assoc()["total"];
 
-/* Cuenta cuántas descargas hay registradas en el sistema */
-$totalDescargas = 0;
-$resultadoDescargas = $conexion->query("SELECT COUNT(*) as total FROM descargas");
-if ($resultadoDescargas) {
-    $filaDescargas = $resultadoDescargas->fetch_assoc();
-    $totalDescargas = (int)$filaDescargas["total"];
+/*
+--------------------------------------------------
+Total de accesos a la app
+--------------------------------------------------
+
+Aunque la tabla se llama "descargas", realmente se
+usa para registrar accesos/uso de la app Android.
+*/
+$totalAccesos = 0;
+$resultadoAccesos = $conexion->query("SELECT COUNT(*) as total FROM descargas");
+if ($resultadoAccesos) {
+    $filaAccesos = $resultadoAccesos->fetch_assoc();
+    $totalAccesos = (int)$filaAccesos["total"];
 }
 ?>
 
@@ -119,12 +126,12 @@ if ($resultadoDescargas) {
         </a>
     </div>
 
-    <!-- Acceso al listado de descargas -->
+    <!-- Acceso al registro de accesos de la app -->
     <div class="card">
-        <h2>Descargas</h2>
-        <p>Total registradas: <strong><?php echo $totalDescargas; ?></strong></p>
+        <h2>Accesos a la app</h2>
+        <p>Total registrados: <strong><?php echo $totalAccesos; ?></strong></p>
         <a href="descargas.php" style="text-decoration:none;">
-            <button>Ver descargas</button>
+            <button>Ver accesos</button>
         </a>
     </div>
 

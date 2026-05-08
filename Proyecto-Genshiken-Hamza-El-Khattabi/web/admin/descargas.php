@@ -1,16 +1,21 @@
 <?php
 /*
 --------------------------------------------------
-Panel de administración - Descargas
+Panel de administración - Accesos a la app
 --------------------------------------------------
 
-Esta página muestra el listado de descargas
-registradas de la aplicación.
+Esta página muestra los accesos registrados desde
+la aplicación Android.
+
+IMPORTANTE:
+Aunque internamente la tabla se llama "descargas",
+esta sección realmente registra usos/inicios de sesión
+de la app, no descargas reales de la APK.
 
 Permite:
-- ver todas las descargas
+- ver todos los accesos registrados
 - buscar por nombre de usuario o dispositivo
-- consultar fecha y versión de la app
+- consultar fecha, dispositivo y versión de la app
 */
 
 require_once "config.php";
@@ -28,14 +33,14 @@ $busqueda = trim($_GET["busqueda"] ?? "");
 $likeBusqueda = "%" . $busqueda . "%";
 
 /* Resúmenes superiores de la sección */
-$totalDescargas = 0;
+$totalAccesos = 0;
 $totalUsuarios = 0;
-$descargasEncontradas = 0;
+$accesosEncontrados = 0;
 
-/* Total de descargas registradas */
+/* Total de accesos registrados */
 $resultadoTotal = $conexion->query("SELECT COUNT(*) AS total FROM descargas");
 if ($resultadoTotal && $filaTotal = $resultadoTotal->fetch_assoc()) {
-    $totalDescargas = (int)$filaTotal["total"];
+    $totalAccesos = (int)$filaTotal["total"];
 }
 
 /* Total de nombres de usuario distintos */
@@ -48,9 +53,14 @@ if ($resultadoUsuarios && $filaUsuarios = $resultadoUsuarios->fetch_assoc()) {
     $totalUsuarios = (int)$filaUsuarios["total"];
 }
 
-/* Consulta principal:
-   - si hay búsqueda, filtra por nombre o dispositivo
-   - si no hay búsqueda, muestra todo */
+/*
+--------------------------------------------------
+Consulta principal
+--------------------------------------------------
+
+Si hay búsqueda, filtra por nombre o dispositivo.
+Si no hay búsqueda, muestra todos los accesos.
+*/
 if ($busqueda !== "") {
     $sql = "
         SELECT id, usuario_id, nombre_usuario, dispositivo, version_app, fecha_descarga
@@ -78,19 +88,19 @@ if ($busqueda !== "") {
     $resultado = $conexion->query($sql);
 
     if (!$resultado) {
-        die("Error al cargar las descargas: " . $conexion->error);
+        die("Error al cargar los accesos: " . $conexion->error);
     }
 }
 
-/* Número de descargas que se van a mostrar */
-$descargasEncontradas = $resultado ? $resultado->num_rows : 0;
+/* Número de accesos que se van a mostrar */
+$accesosEncontrados = $resultado ? $resultado->num_rows : 0;
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Descargas - Panel Admin</title>
+    <title>Accesos a la app - Panel Admin</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .contenedor-descargas {
@@ -262,18 +272,13 @@ $descargasEncontradas = $resultado ? $resultado->num_rows : 0;
             font-weight: bold;
             color: #1e3a8a;
         }
-
-        .texto-secundario {
-            color: #666;
-            font-size: 13px;
-        }
     </style>
 </head>
 <body class="dashboard-body">
 
 <div class="contenedor-descargas">
     <div class="cabecera-descargas">
-        <h1>Listado de descargas</h1>
+        <h1>Accesos a la app</h1>
 
         <div class="acciones">
             <a href="dashboard.php" class="btn-azul">Volver al dashboard</a>
@@ -283,8 +288,8 @@ $descargasEncontradas = $resultado ? $resultado->num_rows : 0;
     <!-- Tarjetas resumen de la sección -->
     <div class="resumen">
         <div class="card-resumen">
-            <h3>Total descargas</h3>
-            <p><?php echo $totalDescargas; ?></p>
+            <h3>Total accesos</h3>
+            <p><?php echo $totalAccesos; ?></p>
         </div>
 
         <div class="card-resumen">
@@ -294,7 +299,7 @@ $descargasEncontradas = $resultado ? $resultado->num_rows : 0;
 
         <div class="card-resumen">
             <h3>Resultados encontrados</h3>
-            <p><?php echo $descargasEncontradas; ?></p>
+            <p><?php echo $accesosEncontrados; ?></p>
         </div>
     </div>
 
@@ -330,13 +335,12 @@ $descargasEncontradas = $resultado ? $resultado->num_rows : 0;
                             <th>Usuario</th>
                             <th>Dispositivo</th>
                             <th>Versión app</th>
-                            <th>Fecha</th>
+                            <th>Fecha de acceso</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php while ($fila = $resultado->fetch_assoc()): ?>
                             <?php
-                                /* Valores por defecto si falta información */
                                 $nombreUsuario = trim($fila["nombre_usuario"] ?? "");
                                 if ($nombreUsuario === "") {
                                     $nombreUsuario = "Anónimo";
@@ -366,7 +370,7 @@ $descargasEncontradas = $resultado ? $resultado->num_rows : 0;
         </div>
     <?php else: ?>
         <div class="sin-datos">
-            No hay descargas registradas.
+            No hay accesos registrados.
         </div>
     <?php endif; ?>
 </div>
