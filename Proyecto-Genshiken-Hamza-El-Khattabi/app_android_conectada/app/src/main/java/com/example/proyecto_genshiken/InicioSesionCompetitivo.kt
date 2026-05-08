@@ -38,10 +38,14 @@ backend PHP.
 
 Cuando el login es correcto:
 - guarda el id y el nombre en UserSession
-- registra el uso/descarga en registrarDescarga.php
+- registra un acceso/uso de la app en registrarDescarga.php
 - entra al juego
 
-Con esto se comprueba el flujo:
+IMPORTANTE:
+Antes se explicaba como "descarga", pero realmente
+esta acción registra un acceso desde la app Android.
+
+Flujo:
 Android → login.php → MySQL
 Android → registrarDescarga.php → admin/descargas.php
 */
@@ -156,7 +160,8 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Primero valida campos vacíos.
                 Después llama a login.php.
-                Si el login es correcto, registra descarga/uso.
+                Si el login es correcto, registra el acceso
+                en el panel admin.
                 */
                 Button(
                     enabled = !cargando,
@@ -181,8 +186,11 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                                 /*
                                 --------------------------------------------------
-                                Registro de descarga / uso
+                                Registro de acceso / uso de app
                                 --------------------------------------------------
+
+                                Esta llamada registra que el usuario ha accedido
+                                desde la app Android.
 
                                 No bloqueamos la entrada al juego aunque falle.
                                 Si falla, el usuario puede jugar igualmente.
