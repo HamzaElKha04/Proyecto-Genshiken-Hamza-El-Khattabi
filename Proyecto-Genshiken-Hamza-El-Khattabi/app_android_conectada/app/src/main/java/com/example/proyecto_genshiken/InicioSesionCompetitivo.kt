@@ -37,21 +37,32 @@ Esta pantalla permite iniciar sesión contra el
 backend PHP.
 
 Cuando el login es correcto:
-- se guarda el id y nombre en UserSession
-- se registra el uso/descarga de la app
-- se navega al juego
+- guarda el id y el nombre en UserSession
+- registra el uso/descarga en registrarDescarga.php
+- entra al juego
 
-Esto demuestra la conexión:
+Con esto se comprueba el flujo:
 Android → login.php → MySQL
-Android → registrarDescarga.php → MySQL
+Android → registrarDescarga.php → admin/descargas.php
 */
 @Composable
 fun InicioCompetitivo(navController: NavHostController) {
 
-    var email by remember { mutableStateOf("") }
-    var contraseña by remember { mutableStateOf("") }
-    var mensajeError by remember { mutableStateOf("") }
-    var cargando by remember { mutableStateOf(false) }
+    var email by remember {
+        mutableStateOf("")
+    }
+
+    var contraseña by remember {
+        mutableStateOf("")
+    }
+
+    var mensajeError by remember {
+        mutableStateOf("")
+    }
+
+    var cargando by remember {
+        mutableStateOf(false)
+    }
 
     Column(
         modifier = Modifier
@@ -59,6 +70,7 @@ fun InicioCompetitivo(navController: NavHostController) {
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -105,6 +117,11 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                /*
+                --------------------------------------------------
+                Campo email
+                --------------------------------------------------
+                */
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -115,6 +132,11 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                /*
+                --------------------------------------------------
+                Campo contraseña
+                --------------------------------------------------
+                */
                 OutlinedTextField(
                     value = contraseña,
                     onValueChange = { contraseña = it },
@@ -127,12 +149,21 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                /*
+                --------------------------------------------------
+                Botón login
+                --------------------------------------------------
+
+                Primero valida campos vacíos.
+                Después llama a login.php.
+                Si el login es correcto, registra descarga/uso.
+                */
                 Button(
                     enabled = !cargando,
                     onClick = {
 
                         if (email.isBlank() || contraseña.isBlank()) {
-                            mensajeError = "No pueden haber campos sin información"
+                            mensajeError = "No pueden haber campos sin información."
                             return@Button
                         }
 
@@ -144,15 +175,16 @@ fun InicioCompetitivo(navController: NavHostController) {
                             cargando = false
 
                             if (success) {
+
                                 UserSession.userId = id
                                 UserSession.userName = nombre
 
                                 /*
                                 --------------------------------------------------
-                                Registro de uso/descarga
+                                Registro de descarga / uso
                                 --------------------------------------------------
 
-                                No bloqueamos la navegación aunque falle.
+                                No bloqueamos la entrada al juego aunque falle.
                                 Si falla, el usuario puede jugar igualmente.
                                 */
                                 UserRepository.registrarDescarga(
@@ -161,14 +193,17 @@ fun InicioCompetitivo(navController: NavHostController) {
                                 )
 
                                 navController.navigate("Juego")
+
                             } else {
-                                mensajeError = "Correo o contraseña incorrectos"
+                                mensajeError = "Correo o contraseña incorrectos."
                             }
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (cargando) "Comprobando..." else "Enviar")
+                    Text(
+                        text = if (cargando) "Comprobando..." else "Enviar"
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))

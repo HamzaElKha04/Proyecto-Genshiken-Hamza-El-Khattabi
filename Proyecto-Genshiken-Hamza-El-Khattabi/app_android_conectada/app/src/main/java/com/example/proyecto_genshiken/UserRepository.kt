@@ -12,10 +12,10 @@ import retrofit2.Response
 Repositorio de datos
 --------------------------------------------------
 
-Este archivo actúa como puente entre las pantallas
-de Android y el backend PHP.
+Este archivo hace de puente entre las pantallas
+de Android y las APIs PHP.
 
-Aquí se centralizan las llamadas a:
+Aquí se centralizan las llamadas principales:
 - login.php
 - register.php
 - getPreguntas.php
@@ -23,8 +23,7 @@ Aquí se centralizan las llamadas a:
 - getRanking.php
 - registrarDescarga.php
 
-La idea es que las pantallas no tengan que saber
-cómo funciona Retrofit por dentro.
+Así las pantallas no llaman directamente a Retrofit.
 */
 object UserRepository {
 
@@ -35,11 +34,11 @@ object UserRepository {
 
     Se usa en el modo competitivo.
 
-    La API login.php devuelve un JSON parecido a:
+    La API login.php debe devolver algo parecido a:
     {
         "status": "OK",
         "id": 1,
-        "nombre": "Hamza"
+        "nombre": "HamsikJr"
     }
     */
     fun login(
@@ -117,13 +116,13 @@ object UserRepository {
 
     /*
     --------------------------------------------------
-    Obtener preguntas desde MySQL
+    Obtener preguntas reales desde MySQL
     --------------------------------------------------
 
-    Conecta con:
+    Llama a:
     getPreguntas.php?nivel=1
 
-    Esto permite que la app use las preguntas creadas
+    Esto permite que Android use las preguntas creadas
     desde el panel admin web.
     */
     fun getPreguntas(
@@ -155,21 +154,18 @@ object UserRepository {
     Guardar puntuación
     --------------------------------------------------
 
-    Conecta con:
+    Llama a:
     guardarPuntuacion.php
 
-    Envía al backend:
+    Guarda:
     - nombre del jugador
     - puntos
-    - tiempo total
-
-    El backend guarda en la tabla puntuaciones y
-    devuelve posición/top3.
+    - tiempo
     */
     fun saveScore(
         usuarioId: Int,
         puntuacion: Int,
-        tiempo: Int,
+        tiempo: Int = 0,
         onResult: (Boolean, GuardarPuntuacionResponse?) -> Unit = { _, _ -> }
     ) {
         val nombreJugador = if (UserSession.userName.isNotBlank()) {
@@ -198,10 +194,7 @@ object UserRepository {
                     }
                 }
 
-                override fun onFailure(
-                    call: Call<GuardarPuntuacionResponse>,
-                    t: Throwable
-                ) {
+                override fun onFailure(call: Call<GuardarPuntuacionResponse>, t: Throwable) {
                     onResult(false, null)
                 }
             })
@@ -209,17 +202,14 @@ object UserRepository {
 
     /*
     --------------------------------------------------
-    Obtener ranking
+    Obtener ranking real
     --------------------------------------------------
 
-    Conecta con:
+    Llama a:
     getRanking.php
 
-    La API devuelve:
-    posicion, usuario, puntos, tiempo y fecha.
-
-    Aquí convertimos esos datos al modelo Player que
-    usa la pantalla Ranking.kt.
+    Convierte el JSON recibido al modelo Player,
+    que es el que usa Ranking.kt.
     */
     fun getRanking(
         onResult: (List<Player>) -> Unit
@@ -244,10 +234,7 @@ object UserRepository {
                     onResult(ranking)
                 }
 
-                override fun onFailure(
-                    call: Call<List<RankingApiResponse>>,
-                    t: Throwable
-                ) {
+                override fun onFailure(call: Call<List<RankingApiResponse>>, t: Throwable) {
                     onResult(emptyList())
                 }
             })
@@ -258,26 +245,25 @@ object UserRepository {
     Registrar descarga / uso inicial de la app
     --------------------------------------------------
 
-    Conecta con:
+    Llama a:
     registrarDescarga.php
 
-    Para prácticas lo usamos como registro de uso de app.
-    Se guarda en admin/descargas.php:
+    Se usa cuando el usuario inicia sesión correctamente.
+    Guarda en el panel admin:
     - usuario
     - dispositivo
-    - versión
+    - versión de la app
+    - fecha
     */
     fun registrarDescarga(
         nombreUsuario: String,
         usuarioId: Int? = null,
         onResult: (Boolean, String) -> Unit = { _, _ -> }
     ) {
-        val dispositivo = obtenerNombreDispositivo()
-
         val datos = RegistrarDescargaRequest(
             usuario_id = usuarioId,
             nombre_usuario = if (nombreUsuario.isBlank()) "Anónimo" else nombreUsuario,
-            dispositivo = dispositivo,
+            dispositivo = obtenerNombreDispositivo(),
             version_app = "1.0.0"
         )
 
@@ -293,14 +279,11 @@ object UserRepository {
                     if (response.isSuccessful && body != null) {
                         onResult(body.ok, body.mensaje)
                     } else {
-                        onResult(false, "No se pudo registrar el uso de la app.")
+                        onResult(false, "No se pudo registrar la descarga.")
                     }
                 }
 
-                override fun onFailure(
-                    call: Call<ApiSimpleResponse>,
-                    t: Throwable
-                ) {
+                override fun onFailure(call: Call<ApiSimpleResponse>, t: Throwable) {
                     onResult(false, "Error de conexión con registrarDescarga.php.")
                 }
             })
@@ -308,13 +291,13 @@ object UserRepository {
 
     /*
     --------------------------------------------------
-    Obtener nombre del dispositivo
+    Nombre del dispositivo
     --------------------------------------------------
 
-    Esto genera algo tipo:
-    Google Pixel 5
-    Samsung SM-A546B
-    Xiaomi Redmi Note 12
+    Ejemplos:
+    - Google sdk_gphone64_x86_64
+    - Samsung SM-A546B
+    - Xiaomi Redmi Note 12
     */
     private fun obtenerNombreDispositivo(): String {
         val fabricante = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
