@@ -38,16 +38,13 @@ backend PHP.
 
 Cuando el login es correcto:
 - guarda el id y el nombre en UserSession
-- registra un acceso/uso de la app en registrarDescarga.php
+- registra la instalación / primer uso detectado
 - entra al juego
 
 IMPORTANTE:
-Antes se explicaba como "descarga", pero realmente
-esta acción registra un acceso desde la app Android.
-
-Flujo:
-Android → login.php → MySQL
-Android → registrarDescarga.php → admin/descargas.php
+No registra cada inicio de sesión como una descarga.
+El backend comprueba si ese usuario ya existe con
+ese dispositivo y versión. Si ya existe, no duplica.
 */
 @Composable
 fun InicioCompetitivo(navController: NavHostController) {
@@ -121,11 +118,6 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                /*
-                --------------------------------------------------
-                Campo email
-                --------------------------------------------------
-                */
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -136,11 +128,6 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                /*
-                --------------------------------------------------
-                Campo contraseña
-                --------------------------------------------------
-                */
                 OutlinedTextField(
                     value = contraseña,
                     onValueChange = { contraseña = it },
@@ -153,16 +140,6 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                /*
-                --------------------------------------------------
-                Botón login
-                --------------------------------------------------
-
-                Primero valida campos vacíos.
-                Después llama a login.php.
-                Si el login es correcto, registra el acceso
-                en el panel admin.
-                */
                 Button(
                     enabled = !cargando,
                     onClick = {
@@ -186,14 +163,13 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                                 /*
                                 --------------------------------------------------
-                                Registro de acceso / uso de app
+                                Registro de instalación / primer uso
                                 --------------------------------------------------
 
-                                Esta llamada registra que el usuario ha accedido
-                                desde la app Android.
-
-                                No bloqueamos la entrada al juego aunque falle.
-                                Si falla, el usuario puede jugar igualmente.
+                                Se llama al backend tras un login correcto.
+                                El backend evita duplicados, por lo que no se
+                                crea una instalación nueva cada vez que el
+                                usuario inicia sesión.
                                 */
                                 UserRepository.registrarDescarga(
                                     nombreUsuario = nombre,

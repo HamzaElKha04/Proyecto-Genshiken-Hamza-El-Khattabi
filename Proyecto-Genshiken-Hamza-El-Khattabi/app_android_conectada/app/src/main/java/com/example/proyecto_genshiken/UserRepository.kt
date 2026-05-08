@@ -31,15 +31,6 @@ object UserRepository {
     --------------------------------------------------
     Login de usuario
     --------------------------------------------------
-
-    Se usa en el modo competitivo.
-
-    La API login.php debe devolver algo parecido a:
-    {
-        "status": "OK",
-        "id": 1,
-        "nombre": "HamsikJr"
-    }
     */
     fun login(
         correo: String,
@@ -85,11 +76,6 @@ object UserRepository {
     --------------------------------------------------
     Registro de usuario
     --------------------------------------------------
-
-    La API register.php devuelve texto plano:
-    - OK
-    - EXISTE
-    - ERROR
     */
     fun register(
         nombre: String,
@@ -118,12 +104,6 @@ object UserRepository {
     --------------------------------------------------
     Obtener preguntas reales desde MySQL
     --------------------------------------------------
-
-    Llama a:
-    getPreguntas.php?nivel=1
-
-    Esto permite que Android use las preguntas creadas
-    desde el panel admin web.
     */
     fun getPreguntas(
         nivel: Int = 1,
@@ -153,14 +133,6 @@ object UserRepository {
     --------------------------------------------------
     Guardar puntuación
     --------------------------------------------------
-
-    Llama a:
-    guardarPuntuacion.php
-
-    Guarda:
-    - nombre del jugador
-    - puntos
-    - tiempo
     */
     fun saveScore(
         usuarioId: Int,
@@ -204,12 +176,6 @@ object UserRepository {
     --------------------------------------------------
     Obtener ranking real
     --------------------------------------------------
-
-    Llama a:
-    getRanking.php
-
-    Convierte el JSON recibido al modelo Player,
-    que es el que usa Ranking.kt.
     */
     fun getRanking(
         onResult: (List<Player>) -> Unit
@@ -242,18 +208,16 @@ object UserRepository {
 
     /*
     --------------------------------------------------
-    Registrar descarga / uso inicial de la app
+    Registrar instalación / primer uso de la app
     --------------------------------------------------
 
-    Llama a:
-    registrarDescarga.php
+    Aunque la función se sigue llamando registrarDescarga
+    para mantener compatibilidad, lo que realmente hace
+    es registrar una instalación detectada.
 
-    Se usa cuando el usuario inicia sesión correctamente.
-    Guarda en el panel admin:
-    - usuario
-    - dispositivo
-    - versión de la app
-    - fecha
+    El backend evita duplicados, así que aunque esta
+    función se llame varias veces, no se creará una fila
+    nueva si ya existe ese usuario + dispositivo + versión.
     */
     fun registrarDescarga(
         nombreUsuario: String,
@@ -279,7 +243,7 @@ object UserRepository {
                     if (response.isSuccessful && body != null) {
                         onResult(body.ok, body.mensaje)
                     } else {
-                        onResult(false, "No se pudo registrar la descarga.")
+                        onResult(false, "No se pudo registrar la instalación.")
                     }
                 }
 
@@ -293,11 +257,6 @@ object UserRepository {
     --------------------------------------------------
     Nombre del dispositivo
     --------------------------------------------------
-
-    Ejemplos:
-    - Google sdk_gphone64_x86_64
-    - Samsung SM-A546B
-    - Xiaomi Redmi Note 12
     */
     private fun obtenerNombreDispositivo(): String {
         val fabricante = Build.MANUFACTURER.replaceFirstChar { it.uppercase() }
@@ -314,9 +273,6 @@ object UserRepository {
     --------------------------------------------------
     Cambio de nombre
     --------------------------------------------------
-
-    Se mantiene para no romper la pantalla antigua
-    de cambio de nombre.
     */
     fun changeName(
         nombreActual: String,
