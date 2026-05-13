@@ -13,8 +13,8 @@ posibles estructuras de tabla:
 1) preguntas.pregunta / preguntas.imagen
 2) preguntas.pregunta_texto / preguntas.pregunta_imagen
 
-Así funciona tanto con la base local como con la
-base subida al hosting.
+Además, corrige la visualización de imágenes para
+que funcione tanto en local como en hosting.
 */
 
 require_once "config.php";
@@ -75,7 +75,7 @@ $columnaImagen = existeColumna($conexion, "preguntas", "imagen")
 
 /*
 --------------------------------------------------
-Resaltar búsqueda
+Resaltar coincidencia de búsqueda
 --------------------------------------------------
 */
 function resaltarCoincidencia(string $texto, string $busqueda): string
@@ -110,6 +110,51 @@ function resaltarCoincidencia(string $texto, string $busqueda): string
     }
 
     return $salida;
+}
+
+/*
+--------------------------------------------------
+Preparar ruta de imagen para el panel admin
+--------------------------------------------------
+
+La imagen puede venir de varias formas:
+
+- nivel1/q1.png
+- img/nivel1/q1.png
+- /WEB_genshi/img/nivel1/q1.png
+- http://...
+- https://...
+
+Esta función evita que el panel construya rutas rotas.
+*/
+function prepararRutaImagenAdmin(string $rutaImagen): string
+{
+    $rutaImagen = trim($rutaImagen);
+
+    if ($rutaImagen === "") {
+        return "";
+    }
+
+    /* Si ya viene como URL completa */
+    if (
+        strpos($rutaImagen, "http://") === 0 ||
+        strpos($rutaImagen, "https://") === 0
+    ) {
+        return $rutaImagen;
+    }
+
+    /* Si ya viene como ruta absoluta del proyecto */
+    if (strpos($rutaImagen, "/") === 0) {
+        return $rutaImagen;
+    }
+
+    /* Si viene empezando por img/ */
+    if (strpos($rutaImagen, "img/") === 0) {
+        return "../" . $rutaImagen;
+    }
+
+    /* Caso normal: nivel1/q1.png */
+    return "../img/" . $rutaImagen;
 }
 
 /*
@@ -419,15 +464,20 @@ $totalResultados = $resultado ? $resultado->num_rows : 0;
                             $totalRespuestas = (int)($fila["total_respuestas"] ?? 0);
                             $respuestasCorrectas = (int)($fila["respuestas_correctas"] ?? 0);
                             $estadoCorrecto = ($totalRespuestas === 4 && $respuestasCorrectas === 1);
+
+                            $rutaImagen = prepararRutaImagenAdmin($fila["imagen"] ?? "");
                         ?>
                         <tr>
                             <td><?php echo (int)$fila["id"]; ?></td>
+
                             <td><?php echo resaltarCoincidencia($fila["pregunta"] ?? "", $busqueda); ?></td>
+
                             <td>Nivel <?php echo (int)$fila["nivel_id"]; ?></td>
+
                             <td>
-                                <?php if (!empty($fila["imagen"])): ?>
+                                <?php if ($rutaImagen !== ""): ?>
                                     <img
-                                        src="../img/<?php echo htmlspecialchars($fila["imagen"], ENT_QUOTES, "UTF-8"); ?>"
+                                        src="<?php echo htmlspecialchars($rutaImagen, ENT_QUOTES, "UTF-8"); ?>"
                                         alt="Imagen pregunta"
                                         class="imagen-mini"
                                     >
@@ -435,6 +485,7 @@ $totalResultados = $resultado ? $resultado->num_rows : 0;
                                     <span class="sin-imagen">Sin imagen</span>
                                 <?php endif; ?>
                             </td>
+
                             <td>
                                 <?php if ($estadoCorrecto): ?>
                                     <span class="estado-ok">Correcta</span><br>
@@ -444,13 +495,16 @@ $totalResultados = $resultado ? $resultado->num_rows : 0;
                                     <small><?php echo $totalRespuestas; ?> respuestas / <?php echo $respuestasCorrectas; ?> correctas</small>
                                 <?php endif; ?>
                             </td>
+
                             <td class="acciones-celda">
                                 <a href="ver_respuestas.php?pregunta_id=<?php echo (int)$fila["id"]; ?>" class="btn-ver">
                                     Ver respuestas
                                 </a>
+
                                 <a href="editar_pregunta.php?pregunta_id=<?php echo (int)$fila["id"]; ?>" class="btn-editar">
                                     Editar
                                 </a>
+
                                 <a href="eliminar_pregunta.php?pregunta_id=<?php echo (int)$fila["id"]; ?>"
                                    onclick="return confirm('¿Seguro que quieres eliminar esta pregunta?');"
                                    class="btn-eliminar">
