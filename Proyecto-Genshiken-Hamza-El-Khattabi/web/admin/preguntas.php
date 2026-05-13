@@ -4,18 +4,22 @@
 Panel de administración - Listado de preguntas
 --------------------------------------------------
 
-Esta página muestra todas las preguntas del juego
-almacenadas en la base de datos.
+Muestra todas las preguntas del juego almacenadas
+en la base de datos.
 
-Se visualizan junto con su nivel, imagen asociada,
-estado de respuestas y acciones disponibles.
+Este archivo está preparado para funcionar con dos
+posibles estructuras de tabla:
 
-Además, incluye un buscador para filtrar preguntas
-por texto y mejorar la gestión del contenido.
+1) preguntas.pregunta / preguntas.imagen
+2) preguntas.pregunta_texto / preguntas.pregunta_imagen
+
+Así funciona tanto con la base local como con la
+base subida al hosting.
 */
+
 require_once "config.php";
 
-/* Comprueba que solo pueda entrar un administrador logueado */
+/* Solo accede el administrador */
 if (!isset($_SESSION["admin_logueado"]) || $_SESSION["admin_logueado"] !== true) {
     header("Location: login.php");
     exit;
@@ -26,13 +30,54 @@ $conexion = conectarDB();
 /* Texto introducido en el buscador */
 $busqueda = trim($_GET["busqueda"] ?? "");
 
-/* Mensajes temporales que vienen de otras acciones, por ejemplo eliminar */
+/* Mensajes temporales */
 $mensajeOk = $_SESSION["mensaje_ok"] ?? "";
 $mensajeError = $_SESSION["mensaje_error"] ?? "";
 
 unset($_SESSION["mensaje_ok"], $_SESSION["mensaje_error"]);
 
-/* Esta función resalta en amarillo la coincidencia encontrada en la búsqueda */
+/*
+--------------------------------------------------
+Comprobar columnas de una tabla
+--------------------------------------------------
+*/
+function existeColumna(mysqli $conexion, string $tabla, string $columna): bool
+{
+    $stmt = $conexion->prepare("SHOW COLUMNS FROM $tabla LIKE ?");
+
+    if (!$stmt) {
+        return false;
+    }
+
+    $stmt->bind_param("s", $columna);
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+
+    $existe = $resultado && $resultado->num_rows > 0;
+
+    $stmt->close();
+
+    return $existe;
+}
+
+/*
+--------------------------------------------------
+Detectar columnas reales de preguntas
+--------------------------------------------------
+*/
+$columnaPregunta = existeColumna($conexion, "preguntas", "pregunta")
+    ? "pregunta"
+    : "pregunta_texto";
+
+$columnaImagen = existeColumna($conexion, "preguntas", "imagen")
+    ? "imagen"
+    : "pregunta_imagen";
+
+/*
+--------------------------------------------------
+Resaltar búsqueda
+--------------------------------------------------
+*/
 function resaltarCoincidencia(string $texto, string $busqueda): string
 {
     if ($busqueda === "") {
@@ -67,30 +112,31 @@ function resaltarCoincidencia(string $texto, string $busqueda): string
     return $salida;
 }
 
-/* Consulta base:
-   - obtiene datos de preguntas
-   - une con niveles
-   - cuenta respuestas por pregunta
-   - cuenta cuántas respuestas correctas tiene */
+/*
+--------------------------------------------------
+Consulta base
+--------------------------------------------------
+
+No dependemos de niveles.numero para evitar errores
+si la tabla niveles tiene otra estructura.
+*/
 $sqlBase = "
     SELECT 
         p.id,
-        p.pregunta,
-        p.imagen,
+        p.$columnaPregunta AS pregunta,
+        p.$columnaImagen AS imagen,
         p.nivel_id,
-        n.numero AS nivel_numero,
         COUNT(r.id) AS total_respuestas,
         SUM(CASE WHEN r.correcta = 1 THEN 1 ELSE 0 END) AS respuestas_correctas
     FROM preguntas p
-    LEFT JOIN niveles n ON p.nivel_id = n.id
     LEFT JOIN respuestas r ON r.pregunta_id = p.id
 ";
 
 /* Si hay búsqueda, se filtra por texto de pregunta */
 if ($busqueda !== "") {
     $sql = $sqlBase . "
-        WHERE p.pregunta LIKE ?
-        GROUP BY p.id, p.pregunta, p.imagen, p.nivel_id, n.numero
+        WHERE p.$columnaPregunta LIKE ?
+        GROUP BY p.id, p.$columnaPregunta, p.$columnaImagen, p.nivel_id
         ORDER BY p.id ASC
     ";
 
@@ -106,7 +152,7 @@ if ($busqueda !== "") {
     $resultado = $stmt->get_result();
 } else {
     $sql = $sqlBase . "
-        GROUP BY p.id, p.pregunta, p.imagen, p.nivel_id, n.numero
+        GROUP BY p.id, p.$columnaPregunta, p.$columnaImagen, p.nivel_id
         ORDER BY p.id ASC
     ";
 
@@ -333,7 +379,6 @@ $totalResultados = $resultado ? $resultado->num_rows : 0;
         <div class="mensaje-error"><?php echo htmlspecialchars($mensajeError, ENT_QUOTES, "UTF-8"); ?></div>
     <?php endif; ?>
 
-    <!-- Buscador para localizar preguntas por texto -->
     <form method="GET" class="form-busqueda">
         <input
             type="text"
@@ -371,22 +416,14 @@ $totalResultados = $resultado ? $resultado->num_rows : 0;
                 <?php if ($resultado && $resultado->num_rows > 0): ?>
                     <?php while ($fila = $resultado->fetch_assoc()): ?>
                         <?php
-                            /* Comprueba si la pregunta está bien configurada:
-                               debe tener 4 respuestas y solo 1 correcta */
                             $totalRespuestas = (int)($fila["total_respuestas"] ?? 0);
                             $respuestasCorrectas = (int)($fila["respuestas_correctas"] ?? 0);
                             $estadoCorrecto = ($totalRespuestas === 4 && $respuestasCorrectas === 1);
                         ?>
                         <tr>
                             <td><?php echo (int)$fila["id"]; ?></td>
-                            <td><?php echo resaltarCoincidencia($fila["pregunta"], $busqueda); ?></td>
-                            <td>
-                                <?php
-                                echo !empty($fila["nivel_numero"])
-                                    ? "Nivel " . htmlspecialchars($fila["nivel_numero"], ENT_QUOTES, "UTF-8")
-                                    : "Nivel " . (int)$fila["nivel_id"];
-                                ?>
-                            </td>
+                            <td><?php echo resaltarCoincidencia($fila["pregunta"] ?? "", $busqueda); ?></td>
+                            <td>Nivel <?php echo (int)$fila["nivel_id"]; ?></td>
                             <td>
                                 <?php if (!empty($fila["imagen"])): ?>
                                     <img
@@ -434,6 +471,7 @@ $totalResultados = $resultado ? $resultado->num_rows : 0;
 
 </body>
 </html>
+
 <?php
 if (isset($stmt) && $stmt instanceof mysqli_stmt) {
     $stmt->close();

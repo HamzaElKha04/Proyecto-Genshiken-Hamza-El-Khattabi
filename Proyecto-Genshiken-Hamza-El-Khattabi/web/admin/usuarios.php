@@ -1,25 +1,48 @@
 <?php
+/*
+--------------------------------------------------
+Panel de administración - Usuarios registrados
+--------------------------------------------------
+
+Muestra los usuarios registrados en la aplicación.
+
+Este archivo usa config.php para conectarse a la
+base de datos, por lo que funciona en local y hosting.
+
+Además, se excluye el usuario admin de pruebas para
+que la tabla muestre solo usuarios reales de la app.
+*/
+
 require_once "config.php";
 
-// Comprueba que el administrador haya iniciado sesión
+/* Solo accede el administrador */
 if (!isset($_SESSION["admin_logueado"]) || $_SESSION["admin_logueado"] !== true) {
     header("Location: login.php");
     exit;
 }
 
-// Conexión a la base de datos
-$conexion = new mysqli("127.0.0.1", "root", "", "u842177649_genshiapp");
+$conexion = conectarDB();
 
-if ($conexion->connect_error) {
-    die("Error de conexión: " . $conexion->connect_error);
-}
+/*
+--------------------------------------------------
+Consulta de usuarios
+--------------------------------------------------
 
-// Consulta para obtener los usuarios registrados
-$sql = "SELECT id, username, email, fecha_registro, email_verificado 
-        FROM usuarios 
-        ORDER BY id ASC";
+Se oculta el usuario admin porque pertenece al panel,
+no a un usuario real de la app.
+*/
+$sql = "
+    SELECT id, username, email, fecha_registro, email_verificado
+    FROM usuarios
+    WHERE username <> 'admin'
+    ORDER BY id ASC
+";
 
 $resultado = $conexion->query($sql);
+
+if (!$resultado) {
+    die("Error al cargar los usuarios: " . $conexion->error);
+}
 ?>
 
 <!DOCTYPE html>
@@ -132,12 +155,11 @@ $resultado = $conexion->query($sql);
                 <tbody>
                     <?php while ($fila = $resultado->fetch_assoc()): ?>
                         <tr>
-                            <td><?php echo $fila["id"]; ?></td>
-                            <td><?php echo htmlspecialchars($fila["username"]); ?></td>
-                            <td><?php echo htmlspecialchars($fila["email"]); ?></td>
-                            <td><?php echo $fila["fecha_registro"]; ?></td>
+                            <td><?php echo (int)$fila["id"]; ?></td>
+                            <td><?php echo htmlspecialchars($fila["username"], ENT_QUOTES, "UTF-8"); ?></td>
+                            <td><?php echo htmlspecialchars($fila["email"], ENT_QUOTES, "UTF-8"); ?></td>
+                            <td><?php echo htmlspecialchars($fila["fecha_registro"], ENT_QUOTES, "UTF-8"); ?></td>
                             <td>
-                                <!-- Muestra visualmente si el correo está verificado o no -->
                                 <?php if ((int)$fila["email_verificado"] === 1): ?>
                                     <span class="estado-si">Sí</span>
                                 <?php else: ?>

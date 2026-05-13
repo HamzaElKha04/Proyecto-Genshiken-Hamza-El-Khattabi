@@ -4,33 +4,20 @@
 API - Obtener ranking global
 --------------------------------------------------
 
-Este archivo devuelve el TOP 10 de jugadores
-ordenado por:
-- puntos (descendente)
-- tiempo (ascendente)
-- fecha (ascendente)
+Devuelve el TOP 10 de jugadores ordenado por:
+- puntos descendente
+- tiempo ascendente
+- fecha ascendente
 
-Se utiliza para mostrar el ranking en el frontend.
+Este archivo usa admin/config.php para funcionar
+correctamente tanto en local como en hosting.
 */
 
 header('Content-Type: application/json; charset=utf-8');
 
-$host = "localhost";
-$usuario = "root";
-$contrasena = "";
-$basedatos = "u842177649_genshiapp";
+require_once "../admin/config.php";
 
-$conexion = new mysqli($host, $usuario, $contrasena, $basedatos);
-
-if ($conexion->connect_error) {
-    echo json_encode([
-        "ok" => false,
-        "mensaje" => "Error de conexión: " . $conexion->connect_error
-    ]);
-    exit;
-}
-
-$conexion->set_charset("utf8mb4");
+$conexion = conectarDB();
 
 $sql = "
     SELECT 
@@ -50,7 +37,7 @@ if (!$resultado) {
     echo json_encode([
         "ok" => false,
         "mensaje" => "Error en la consulta del ranking: " . $conexion->error
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -65,6 +52,7 @@ while ($fila = $resultado->fetch_assoc()) {
         "tiempo" => (int)$fila["tiempo"],
         "fecha" => $fila["fecha"]
     ];
+
     $posicion++;
 }
 
