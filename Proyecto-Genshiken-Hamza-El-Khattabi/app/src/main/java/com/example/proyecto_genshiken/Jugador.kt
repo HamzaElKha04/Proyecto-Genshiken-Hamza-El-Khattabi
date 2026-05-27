@@ -1,4 +1,4 @@
-package com.example.proyectogenshikenhamza.PROYECTO
+package com.example.proyecto_genshiken
 
 data class Player(
     val nombre: String,

@@ -1,20 +1,24 @@
-package com.example.proyectogenshikenhamza.PROYECTO
+package com.example.proyecto_genshiken
 
+import android.R
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,29 +26,38 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+
 @Composable
-fun RegistroCasual(navController: NavHostController) {
+fun InicioCasual(navController: NavHostController) {
 
-    var nombreUsuario by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var contraseña by remember { mutableStateOf("") }
-    var aceptaTerminos by remember { mutableStateOf(false) }
+        // con remember nos aseguramos que el programa recuerde en todo momento el valor de la variable
+    var email by remember {
+        mutableStateOf("")
+    }
 
-    var mensajeError by remember { mutableStateOf("") }
+    var contraseña by remember {
+        mutableStateOf("")
+    }
 
+    var mensajeError by remember {
+        mutableStateOf("")
+    }
+
+    //podemos dividirlo en varios box, pero como solo hay una seccion y nada de barra de busqueda ni nada. lo haremos todo en un column
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
+        // con spacer pues... espaciamos jaja
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
@@ -53,43 +66,44 @@ fun RegistroCasual(navController: NavHostController) {
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Card(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "Bienvenido al modo casual, donde podrás demostrar tus conocimientos acerca del mundo del anime basándote en espadas",
+            fontSize = 16.sp
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // con la card se crea el fondo gris del formulario
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Column(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
                 Text(
-                    text = "Registrarse",
+                    text = "INICIA SESION",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                OutlinedTextField(
-                    value = nombreUsuario,
-                    onValueChange = { nombreUsuario = it },
-                    label = { Text("Nombre de usuario") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
+                // Aqui es donde se pone el correo
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Correo electrónico") },
+                    label = { Text("Correo Electrónico") },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Aqui irán las contraseñas
                 OutlinedTextField(
                     value = contraseña,
                     onValueChange = { contraseña = it },
@@ -100,45 +114,25 @@ fun RegistroCasual(navController: NavHostController) {
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = aceptaTerminos,
-                        onCheckedChange = { aceptaTerminos = it }
-                    )
-                    Text(text = "Acepto los términos y servicios")
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
+                Spacer(modifier = Modifier.height(20.dp))
+                    //Aqui tenemos el Botón de Enviar. Verificara la información y te llevará al juego
                 Button(
                     onClick = {
-                        when {
-                            nombreUsuario.isBlank() || email.isBlank() || contraseña.isBlank() ->
-                                mensajeError = "Todos los campos son obligatorios"
-
-                            !email.contains("@") || !email.contains(".") ->
-                                mensajeError = "Correo electrónico no válido"
-
-                            contraseña.length < 4 ->
-                                mensajeError = "La contraseña debe tener al menos 4 caracteres"
-
-                            !aceptaTerminos ->
-                                mensajeError = "Debes aceptar los términos"
-
-                            else -> {
-                                mensajeError = ""
-                                navController.navigate("inicio_sesion_casual")
-                            }
+                        if (email.isBlank() || contraseña.isBlank()) {
+                            mensajeError = "Todos los campos son obligatorios"
+                        } else if (contraseña.length < 8) {
+                            mensajeError = "La contraseña debe tener al menos 4 caracteres"
+                        } else {
+                            mensajeError = ""
+                            navController.navigate("juego")
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+
+
                 ) {
-                    Text("Registrarse")
+                    Text("Enviar")
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -153,10 +147,10 @@ fun RegistroCasual(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = "¿Ya tienes cuenta? Inicia sesión",
+                    text = "¿No tienes cuenta? Regístrate",
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable {
-                        navController.navigate("inicio_sesion_casual")
+                        navController.navigate("RegistroCasual")
                     }
                 )
             }

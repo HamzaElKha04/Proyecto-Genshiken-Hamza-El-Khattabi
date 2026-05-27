@@ -1,4 +1,4 @@
-package com.example.proyectogenshikenhamza
+package com.example.proyecto_genshiken
 
 import org.junit.Test
 

@@ -1,7 +1,8 @@
-package com.example.proyectogenshikenhamza.PROYECTO
+package com.example.proyecto_genshiken
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,9 +30,18 @@ import androidx.navigation.NavHostController
 
 @Composable
 fun InicioCompetitivo(navController: NavHostController) {
-    var usuario by remember { mutableStateOf("") }
-    var contraseña by remember { mutableStateOf("") }
-    var mensajeError by remember { mutableStateOf("") }
+
+    var email by remember {
+        mutableStateOf("")
+    }
+
+    var contraseña by remember {
+        mutableStateOf("")
+    }
+
+    var mensajeError by remember {
+        mutableStateOf("")
+    }
 
     Column(
         modifier = Modifier
@@ -39,6 +49,19 @@ fun InicioCompetitivo(navController: NavHostController) {
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "←",
+                fontSize = 24.sp,
+                modifier = Modifier.clickable {
+                    navController.navigate("inicio")
+                }
+            )
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
@@ -50,35 +73,40 @@ fun InicioCompetitivo(navController: NavHostController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Bienvenido al modo competitivo, donde competirás contra otros jugadores para conseguir la mayor puntuación, subir en el ranking y optar a un premio o vale para el ganador.",
+            text = "Bienvenido al modo competitivo, demuestra tu conocimiento acerca del maravilloso mundo de las espadas frente a otros usuarios. ¡Con la oportunidad de llevarte un jugoso PREMIO!",
             fontSize = 16.sp
         )
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        Card(modifier = Modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Column(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 Text(
-                    text = "INICIA SESIÓN",
+                    text = "INICIA SESION",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Textfield para poner el Email
                 OutlinedTextField(
-                    value = usuario,
-                    onValueChange = { usuario = it },
-                    label = { Text("Nombre de usuario") },
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Correo Electrónico") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Textfield para ppner la contraseña
                 OutlinedTextField(
                     value = contraseña,
                     onValueChange = { contraseña = it },
@@ -93,18 +121,31 @@ fun InicioCompetitivo(navController: NavHostController) {
 
                 Button(
                     onClick = {
-                        when {
-                            usuario.isBlank() || contraseña.isBlank() -> {
-                                mensajeError = "Todos los campos son obligatorios"
-                            }
-                            contraseña.length < 4 -> {
-                                mensajeError = "La contraseña debe tener al menos 4 caracteres"
-                            }
-                            else -> {
-                                mensajeError = ""
-                                navController.navigate("juego")
+
+                        UserRepository.login(email, contraseña) { success, id, nombre ->
+
+                            if (success) {
+
+                                UserSession.userId = id
+                                UserSession.userName = nombre
+
+                                UserRepository.obtenerMonedas(id) { monedas ->
+                                    GachaState.monedas.value = monedas
+                                }
+
+                                UserRepository.obtenerEspadas(id) { espadas ->
+                                    GachaState.espadasDesbloqueadas.clear()
+                                    GachaState.espadasDesbloqueadas.addAll(espadas)
+                                }
+
+                                navController.navigate("Juego")
+
+                            } else {
+
+                                mensajeError = "Correo no verificado o datos incorrectos"
                             }
                         }
+
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -126,7 +167,24 @@ fun InicioCompetitivo(navController: NavHostController) {
                     text = "¿No tienes cuenta? Regístrate",
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable {
-                        navController.navigate("registro_competi")
+                        navController.navigate("RegistroCompeti")
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "Reenviar correo de verificación",
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable {
+
+                        UserRepository.reenviarVerificacion(email) {
+
+                            mensajeError = when(it) {
+                                "ENVIADO" -> "Correo enviado"
+                                "YA_VERIFICADO" -> "La cuenta ya está verificada"
+                                else -> "Error enviando correo"
+                            }
+                        }
                     }
                 )
             }
