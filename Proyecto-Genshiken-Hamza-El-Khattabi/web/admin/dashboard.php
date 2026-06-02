@@ -11,6 +11,7 @@ Incluye estadísticas generales del sistema como:
 - Total de respuestas
 - Total de niveles
 - Total de instalaciones detectadas de la app
+- Total de espadas del gacha
 
 Además permite acceder a las diferentes secciones
 del panel de administración.
@@ -26,19 +27,54 @@ if (!isset($_SESSION["admin_logueado"]) || $_SESSION["admin_logueado"] !== true)
 
 $conexion = conectarDB();
 
+/*
+--------------------------------------------------
+Función auxiliar para comprobar si existe una tabla
+--------------------------------------------------
+*/
+function existeTablaDashboard(mysqli $conexion, string $tabla): bool
+{
+    $tabla = $conexion->real_escape_string($tabla);
+    $resultado = $conexion->query("SHOW TABLES LIKE '$tabla'");
+
+    return $resultado && $resultado->num_rows > 0;
+}
+
 /* CONTADORES GENERALES DEL DASHBOARD */
-$totalPreguntas = (int)$conexion->query("SELECT COUNT(*) as total FROM preguntas")->fetch_assoc()["total"];
+$totalPreguntas = 0;
+$totalRespuestas = 0;
+$totalNiveles = 0;
+$totalInstalaciones = 0;
+$totalEspadas = 0;
 
-$totalRespuestas = (int)$conexion->query("
-    SELECT COUNT(*) as total
-    FROM respuestas r
-    INNER JOIN preguntas p ON r.pregunta_id = p.id
-")->fetch_assoc()["total"];
+if (existeTablaDashboard($conexion, "preguntas")) {
+    $resultadoPreguntas = $conexion->query("SELECT COUNT(*) as total FROM preguntas");
 
-$totalNiveles = (int)$conexion->query("
-    SELECT COUNT(DISTINCT nivel_id) as total
-    FROM preguntas
-")->fetch_assoc()["total"];
+    if ($resultadoPreguntas) {
+        $totalPreguntas = (int)$resultadoPreguntas->fetch_assoc()["total"];
+    }
+
+    $resultadoNiveles = $conexion->query("
+        SELECT COUNT(DISTINCT nivel_id) as total
+        FROM preguntas
+    ");
+
+    if ($resultadoNiveles) {
+        $totalNiveles = (int)$resultadoNiveles->fetch_assoc()["total"];
+    }
+}
+
+if (existeTablaDashboard($conexion, "respuestas") && existeTablaDashboard($conexion, "preguntas")) {
+    $resultadoRespuestas = $conexion->query("
+        SELECT COUNT(*) as total
+        FROM respuestas r
+        INNER JOIN preguntas p ON r.pregunta_id = p.id
+    ");
+
+    if ($resultadoRespuestas) {
+        $totalRespuestas = (int)$resultadoRespuestas->fetch_assoc()["total"];
+    }
+}
 
 /*
 --------------------------------------------------
@@ -52,19 +88,33 @@ desde la app Android.
 Se agrupa por usuario + dispositivo + versión para
 no contar varias veces el mismo login.
 */
-$totalInstalaciones = 0;
-$resultadoInstalaciones = $conexion->query("
-    SELECT COUNT(*) AS total
-    FROM (
-        SELECT nombre_usuario, dispositivo, version_app
-        FROM descargas
-        GROUP BY nombre_usuario, dispositivo, version_app
-    ) AS instalaciones_unicas
-");
+if (existeTablaDashboard($conexion, "descargas")) {
+    $resultadoInstalaciones = $conexion->query("
+        SELECT COUNT(*) AS total
+        FROM (
+            SELECT nombre_usuario, dispositivo, version_app
+            FROM descargas
+            GROUP BY nombre_usuario, dispositivo, version_app
+        ) AS instalaciones_unicas
+    ");
 
-if ($resultadoInstalaciones) {
-    $filaInstalaciones = $resultadoInstalaciones->fetch_assoc();
-    $totalInstalaciones = (int)$filaInstalaciones["total"];
+    if ($resultadoInstalaciones) {
+        $filaInstalaciones = $resultadoInstalaciones->fetch_assoc();
+        $totalInstalaciones = (int)$filaInstalaciones["total"];
+    }
+}
+
+/*
+--------------------------------------------------
+Total de espadas del gacha
+--------------------------------------------------
+*/
+if (existeTablaDashboard($conexion, "espadas")) {
+    $resultadoEspadas = $conexion->query("SELECT COUNT(*) as total FROM espadas");
+
+    if ($resultadoEspadas) {
+        $totalEspadas = (int)$resultadoEspadas->fetch_assoc()["total"];
+    }
 }
 ?>
 
@@ -128,7 +178,7 @@ if ($resultadoInstalaciones) {
 
     <div class="card">
         <h2>Ranking</h2>
-        <p>Sección para consultar el ranking.</p>
+        <p>Sección para consultar el ranking de jugadores.</p>
         <a href="ranking.php" style="text-decoration:none;">
             <button>Ver ranking</button>
         </a>
@@ -139,6 +189,15 @@ if ($resultadoInstalaciones) {
         <p>Total registradas: <strong><?php echo $totalInstalaciones; ?></strong></p>
         <a href="descargas.php" style="text-decoration:none;">
             <button>Ver instalaciones</button>
+        </a>
+    </div>
+
+    <div class="card">
+        <h2>Gacha / Espadas</h2>
+        <p>Total de espadas registradas: <strong><?php echo $totalEspadas; ?></strong></p>
+        <p>Sección para gestionar el catálogo de espadas del gachapon.</p>
+        <a href="espadas.php" style="text-decoration:none;">
+            <button>Gestionar espadas</button>
         </a>
     </div>
 

@@ -12,6 +12,7 @@ Define la apariencia general del sistema, incluyendo:
 - Tarjetas del dashboard
 - Botones y cajas de error
 */
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -112,6 +113,10 @@ body {
     border-radius: 8px;
 }
 
+.logout-btn:hover {
+    background: #c0392b;
+}
+
 .dashboard-container {
     padding: 30px;
     display: grid;
@@ -143,5 +148,9 @@ body {
     border-radius: 8px;
     background: #bfc9d9;
     color: #333;
-    cursor: not-allowed;
+    cursor: pointer;
+}
+
+.card button:hover {
+    background: #aeb9cb;
 }
