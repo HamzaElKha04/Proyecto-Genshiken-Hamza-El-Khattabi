@@ -11,6 +11,7 @@ Desde aquí el administrador puede:
 - Crear una espada nueva
 - Editar una espada existente
 - Eliminar una espada
+- Ver enlaces clicables dentro de la descripción
 
 La tabla usada es:
 - espadas
@@ -33,6 +34,44 @@ $mensajeOk = $_SESSION["mensaje_ok"] ?? "";
 $mensajeError = $_SESSION["mensaje_error"] ?? "";
 
 unset($_SESSION["mensaje_ok"], $_SESSION["mensaje_error"]);
+
+/*
+--------------------------------------------------
+Función para escapar texto
+--------------------------------------------------
+*/
+function escapar($texto)
+{
+    return htmlspecialchars((string)$texto, ENT_QUOTES, "UTF-8");
+}
+
+/*
+--------------------------------------------------
+Función para convertir enlaces en clicables
+--------------------------------------------------
+
+Si en la descripción hay un enlace tipo:
+http://...
+https://...
+
+El panel lo muestra como enlace clicable.
+*/
+function mostrarDescripcionConEnlaces($texto)
+{
+    $textoSeguro = escapar($texto);
+
+    $textoConEnlaces = preg_replace_callback(
+        '/(https?:\/\/[^\s]+)/i',
+        function ($coincidencia) {
+            $url = $coincidencia[0];
+
+            return '<a href="' . $url . '" target="_blank" rel="noopener noreferrer" class="enlace-oferta">' . $url . '</a>';
+        },
+        $textoSeguro
+    );
+
+    return nl2br($textoConEnlaces);
+}
 
 $resultadoEspadas = $conexion->query("
     SELECT id, nombre, rareza, descripcion, imagen_url
@@ -156,6 +195,17 @@ $totalEspadas = $resultadoEspadas->num_rows;
             max-width: 420px;
             line-height: 1.4;
             color: #444;
+            word-break: break-word;
+        }
+
+        .enlace-oferta {
+            color: #1d4ed8;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .enlace-oferta:hover {
+            color: #dc2626;
         }
 
         .rareza {
@@ -244,11 +294,11 @@ $totalEspadas = $resultadoEspadas->num_rows;
     </div>
 
     <?php if ($mensajeOk !== ""): ?>
-        <div class="mensaje-ok"><?php echo htmlspecialchars($mensajeOk, ENT_QUOTES, "UTF-8"); ?></div>
+        <div class="mensaje-ok"><?php echo escapar($mensajeOk); ?></div>
     <?php endif; ?>
 
     <?php if ($mensajeError !== ""): ?>
-        <div class="mensaje-error"><?php echo htmlspecialchars($mensajeError, ENT_QUOTES, "UTF-8"); ?></div>
+        <div class="mensaje-error"><?php echo escapar($mensajeError); ?></div>
     <?php endif; ?>
 
     <div class="tabla-wrapper">
@@ -280,13 +330,14 @@ $totalEspadas = $resultadoEspadas->num_rows;
                                 $claseRareza = "rareza-legendaria";
                             }
                         ?>
+
                         <tr>
                             <td><?php echo (int)$espada["id"]; ?></td>
 
                             <td>
                                 <?php if (!empty($espada["imagen_url"])): ?>
                                     <img
-                                        src="<?php echo htmlspecialchars($espada["imagen_url"], ENT_QUOTES, "UTF-8"); ?>"
+                                        src="<?php echo escapar($espada["imagen_url"]); ?>"
                                         alt="Imagen espada"
                                         class="imagen-mini"
                                     >
@@ -296,21 +347,21 @@ $totalEspadas = $resultadoEspadas->num_rows;
                             </td>
 
                             <td>
-                                <strong><?php echo htmlspecialchars($espada["nombre"], ENT_QUOTES, "UTF-8"); ?></strong>
+                                <strong><?php echo escapar($espada["nombre"]); ?></strong>
                             </td>
 
                             <td>
                                 <span class="rareza <?php echo $claseRareza; ?>">
-                                    <?php echo htmlspecialchars($rareza, ENT_QUOTES, "UTF-8"); ?>
+                                    <?php echo escapar($rareza); ?>
                                 </span>
                             </td>
 
                             <td class="descripcion-corta">
-                                <?php echo htmlspecialchars($espada["descripcion"], ENT_QUOTES, "UTF-8"); ?>
+                                <?php echo mostrarDescripcionConEnlaces($espada["descripcion"]); ?>
                             </td>
 
                             <td>
-                                <small><?php echo htmlspecialchars($espada["imagen_url"], ENT_QUOTES, "UTF-8"); ?></small>
+                                <small><?php echo escapar($espada["imagen_url"]); ?></small>
                             </td>
 
                             <td class="acciones">
@@ -327,6 +378,7 @@ $totalEspadas = $resultadoEspadas->num_rows;
                                 </a>
                             </td>
                         </tr>
+
                     <?php endwhile; ?>
                 <?php else: ?>
                     <tr>

@@ -4,23 +4,46 @@
 Configuración general del panel de administración
 --------------------------------------------------
 
-Este archivo:
-- inicia la sesión
-- guarda las credenciales del admin
-- centraliza la conexión a la base de datos
+IMPORTANTE:
+Este archivo está preparado para el repositorio público.
+Las credenciales son privadas.
+
+Para trabajar en local o hosting, he un archivo
+config.local.php con las credenciales reales.
 */
 
 session_start();
 
-/* Credenciales del panel admin */
-$USUARIO_ADMIN = "admin";
-$PASSWORD_ADMIN = "1234";
+/*
+--------------------------------------------------
+Carga de configuración local privada
+--------------------------------------------------
 
-/* Configuración de base de datos */
-$DB_HOST = "127.0.0.1";
-$DB_USER = "root";
-$DB_PASS = "";
-$DB_NAME = "u842177649_genshiapp";
+El archivo config.local.php NO se sube a GitHub.
+Ahí irían las credenciales reales de cada entorno.
+*/
+$configLocal = __DIR__ . "/config.local.php";
+
+if (file_exists($configLocal)) {
+    require_once $configLocal;
+} else {
+    /*
+    --------------------------------------------------
+    Valores de ejemplo
+    --------------------------------------------------
+
+    Estos datos son solo orientativos.
+    Cada desarrollador debe cambiarlos en config.local.php.
+    */
+
+    $USUARIO_ADMIN = "admin";
+    $PASSWORD_ADMIN = "CAMBIAR_PASSWORD";
+
+    $DB_HOST = "localhost";
+    $DB_USER = "usuario_base_datos";
+    $DB_PASS = "password_base_datos";
+    $DB_NAME = "nombre_base_datos";
+}
 
 /*
 --------------------------------------------------
@@ -28,8 +51,6 @@ Función de conexión
 --------------------------------------------------
 
 Devuelve una conexión mysqli lista para usar.
-Así, cuando cambiemos a hosting más adelante, solo
-tendreé que modificar este archivo.
 */
 function conectarDB(): mysqli
 {
