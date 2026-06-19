@@ -5,3 +5,7 @@ object UserSession {
     var userId: Int = 0
     var userName: String = ""
 }
+object GameSession {
+    var lastScore: Int = 0
+    var lastTime: Int = 0
+}

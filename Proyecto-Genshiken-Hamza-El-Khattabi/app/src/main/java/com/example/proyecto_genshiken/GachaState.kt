@@ -1,5 +1,6 @@
 package com.example.proyecto_genshiken
 
+
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 
@@ -9,9 +10,13 @@ object GachaState {
 
     var espadasDesbloqueadas = mutableStateListOf<Int>()
 
-    fun añadirEspada(id: Int) {
+    var listaEspadasOnline =
+        mutableStateListOf<EspadaOnline>()
 
-        if (!espadasDesbloqueadas.contains(id)) {
+    fun añadirEspada(id:Int){
+
+        if(!espadasDesbloqueadas.contains(id)){
+
             espadasDesbloqueadas.add(id)
         }
     }

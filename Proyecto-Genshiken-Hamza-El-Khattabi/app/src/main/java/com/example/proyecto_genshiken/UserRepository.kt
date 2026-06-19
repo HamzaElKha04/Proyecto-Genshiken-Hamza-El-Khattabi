@@ -1,5 +1,6 @@
 package com.example.proyecto_genshiken
 
+import android.os.Build
 import com.example.proyecto_genshiken.Player
 import com.example.proyecto_genshiken.RetrofitClient
 import okhttp3.ResponseBody
@@ -19,7 +20,10 @@ object UserRepository {
         RetrofitClient.api.login(correo, password)
             .enqueue(object : Callback<ResponseBody> {
 
-                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                override fun onResponse(
+                    call: Call<ResponseBody>,
+                    response: Response<ResponseBody>
+                ) {
 
                     val json = response.body()?.string()
 
@@ -56,7 +60,10 @@ object UserRepository {
         RetrofitClient.api.register(nombre, correo, password)
             .enqueue(object : Callback<ResponseBody> {
 
-                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                override fun onResponse(
+                    call: Call<ResponseBody>,
+                    response: Response<ResponseBody>
+                ) {
 
                     val result = response.body()?.string()?.trim() ?: "ERROR"
 
@@ -69,40 +76,74 @@ object UserRepository {
             })
     }
 
+
     // Con esta funcion Guardaremos la puntuacion del jugador
     fun saveScore(
-        usuarioId: Int,
-        puntuacion: Int
+        userId: Int,
+        puntuacion: Int,
+        tiempo: Int,
+        onResult: (Boolean) -> Unit
     ) {
 
-        RetrofitClient.api.saveScore(usuarioId, puntuacion)
-            .enqueue(object : Callback<String> {
+        RetrofitClient.api.saveScore(
+            userId,
+            puntuacion,
+            tiempo
+        ).enqueue(object : Callback<ResponseBody> {
 
-                override fun onResponse(call: Call<String>, response: Response<String>) {}
+            override fun onResponse(
+                call: Call<ResponseBody>,
+                response: Response<ResponseBody>
+            ) {
 
-                override fun onFailure(call: Call<String>, t: Throwable) {}
-            })
+                val resultado =
+                    response.body()?.string()?.trim()
+
+                onResult(resultado == "OK")
+            }
+
+            override fun onFailure(
+                call: Call<ResponseBody>,
+                t: Throwable
+            ) {
+
+                onResult(false)
+            }
+        })
     }
 
-    // Con esto obtendremos el Ranking de los mejores jugadores, para asi poder ponerlos en la tabla
+// Con esto obtendremos el Ranking de los mejores jugadores, para asi poder ponerlos en la tabla
 
     fun getRanking(
+        mes: Int,
+        anio: Int,
         onResult: (List<Player>) -> Unit
     ) {
 
-        RetrofitClient.api.getRanking()
-            .enqueue(object : Callback<List<Player>> {
+        RetrofitClient.api.getRanking(
+            mes,
+            anio
+        ).enqueue(object : Callback<List<Player>> {
 
-                override fun onResponse(call: Call<List<Player>>, response: Response<List<Player>>) {
-                    onResult(response.body() ?: emptyList())
-                }
+            override fun onResponse(
+                call: Call<List<Player>>,
+                response: Response<List<Player>>
+            ) {
 
-                override fun onFailure(call: Call<List<Player>>, t: Throwable) {
-                    onResult(emptyList())
-                }
-            })
+                onResult(response.body() ?: emptyList())
+            }
+
+            override fun onFailure(
+                call: Call<List<Player>>,
+                t: Throwable
+            ) {
+
+                onResult(emptyList())
+            }
+        })
     }
-        // con esta funcion permitiremos el cambio de nombre
+
+    // con esta funcion permitiremos el cambio de nombre
     fun changeName(
         nombreActual: String,
         nuevoNombre: String,
@@ -126,6 +167,7 @@ object UserRepository {
                 }
             })
     }
+
     fun guardarMonedas(
         usuarioId: Int,
         monedas: Int
@@ -137,12 +179,14 @@ object UserRepository {
                 override fun onResponse(
                     call: Call<String>,
                     response: Response<String>
-                ) {}
+                ) {
+                }
 
                 override fun onFailure(
                     call: Call<String>,
                     t: Throwable
-                ) {}
+                ) {
+                }
             })
     }
 
@@ -185,12 +229,14 @@ object UserRepository {
                 override fun onResponse(
                     call: Call<String>,
                     response: Response<String>
-                ) {}
+                ) {
+                }
 
                 override fun onFailure(
                     call: Call<String>,
                     t: Throwable
-                ) {}
+                ) {
+                }
             })
     }
 
@@ -219,6 +265,7 @@ object UserRepository {
                 }
             })
     }
+
     fun reenviarVerificacion(
         correo: String,
         onResult: (String) -> Unit
@@ -239,13 +286,14 @@ object UserRepository {
                 }
             })
     }
+
     fun obtenerPreguntas(
-        nivelId:Int,
-        onResult:(List<Preguntas>) -> Unit
-    ){
+        nivelId: Int,
+        onResult: (List<Preguntas>) -> Unit
+    ) {
 
         RetrofitClient.api.obtenerPreguntas(nivelId)
-            .enqueue(object : Callback<List<Preguntas>>{
+            .enqueue(object : Callback<List<Preguntas>> {
 
                 override fun onResponse(
                     call: Call<List<Preguntas>>,
@@ -264,4 +312,91 @@ object UserRepository {
                 }
             })
     }
+
+    fun obtenerEspadasGacha(
+        onResult: (List<EspadaOnline>) -> Unit
+    ) {
+
+        RetrofitClient.api.obtenerEspadasGacha()
+            .enqueue(object : Callback<List<EspadaOnline>> {
+
+                override fun onResponse(
+                    call: Call<List<EspadaOnline>>,
+                    response: Response<List<EspadaOnline>>
+                ) {
+
+                    onResult(response.body() ?: emptyList())
+                }
+
+                override fun onFailure(
+                    call: Call<List<EspadaOnline>>,
+                    t: Throwable
+                ) {
+
+                    onResult(emptyList())
+                }
+            })
+
+    }
+
+    /*
+   --------------------------------------------------
+   Registrar instalación / primer uso de la app
+   --------------------------------------------------
+
+   Se llamará SOLO desde el login competitivo.
+
+   No bloquea el funcionamiento de la app si falla.
+   */
+    fun registrarDescarga(
+        usuarioId: Int,
+        nombreUsuario: String
+    ) {
+        val dispositivo = obtenerNombreDispositivo()
+        val versionApp = "1.0.0"
+
+        RetrofitClient.api.registrarDescarga(
+            usuarioId = usuarioId,
+            nombreUsuario = nombreUsuario,
+            dispositivo = dispositivo,
+            versionApp = versionApp
+        ).enqueue(object : Callback<ResponseBody> {
+
+            override fun onResponse(
+                call: Call<ResponseBody>,
+                response: Response<ResponseBody>
+            ) {
+                /*
+                No mostramos nada al usuario porque esto
+                es solo para el panel de administración.
+                */
+            }
+
+            override fun onFailure(
+                call: Call<ResponseBody>,
+                t: Throwable
+            ) {
+                /*
+                No bloqueamos la app si falla esta estadística.
+                */
+            }
+        })
+    }
+
+    /*
+    --------------------------------------------------
+    Obtener nombre del dispositivo
+    --------------------------------------------------
+    */
+    private fun obtenerNombreDispositivo(): String {
+        val fabricante = Build.MANUFACTURER
+        val modelo = Build.MODEL
+
+        return "$fabricante $modelo"
+            .replaceFirstChar { it.uppercase() }
+            .trim()
+    }
 }
+
+
+

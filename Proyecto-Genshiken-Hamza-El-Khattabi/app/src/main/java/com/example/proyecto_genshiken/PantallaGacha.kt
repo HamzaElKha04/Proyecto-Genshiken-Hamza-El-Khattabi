@@ -1,174 +1,528 @@
 package com.example.proyecto_genshiken
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.compose.material3.*
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.ui.graphics.Color
-
+import coil.compose.AsyncImage
 
 @Composable
-
-
 fun PantallaGacha(navController: NavController) {
 
-    var resultado by remember { mutableStateOf<Espada?>(null) }
+    var resultados by remember {
+        mutableStateOf<List<EspadaOnline>>(emptyList())
+    }
 
+    var animarCartas by remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(Unit) {
 
-    Column(
+        UserRepository.obtenerEspadasGacha {
+
+            GachaState.listaEspadasOnline.clear()
+
+            GachaState.listaEspadasOnline.addAll(it)
+
+            println("ESPADAS CARGADAS: ${it.size}")
+
+            it.forEach { espada ->
+
+                println("ESPADA: ${espada.nombre}")
+                println("IMAGEN: ${espada.imagen_url}")
+            }
+        }
+    }
+    /*
+    ----------------------------------------
+    ANIMACIÓN BOTONES
+    ----------------------------------------
+    */
+
+    val infiniteTransition =
+        rememberInfiniteTransition(label = "")
+
+    val scaleBoton by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.05f,
+
+        animationSpec = infiniteRepeatable(
+            animation = tween(900),
+            repeatMode = RepeatMode.Reverse
+        ),
+
+        label = ""
+    )
+
+    /*
+    ----------------------------------------
+    FONDO
+    ----------------------------------------
+    */
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF0F172A),
+                        Color(0xFF1E1B4B),
+                        Color(0xFF111827)
+                    )
+                )
+            )
     ) {
-        Spacer(Modifier.height(42.dp))
 
-        Text(" Gachapon Genshiken", style = MaterialTheme.typography.headlineMedium)
-
-        Spacer(Modifier.height(16.dp))
-
-        Text("Monedas: ${GachaState.monedas.value}")
-
-        Spacer(Modifier.height(40.dp))
-
-        Button(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp),
-            onClick = {
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
 
-                if (GachaState.monedas.value >= 10) {
-
-                    GachaState.monedas.value -= 10
-
-                    val espada = tirarGacha()
-                    resultado = espada
-
-                    GachaState.añadirEspada(espada.id)
-
-                    UserRepository.guardarMonedas(
-                        UserSession.userId,
-                        GachaState.monedas.value
-                    )
-
-                    UserRepository.guardarEspada(
-                        UserSession.userId,
-                        espada.id
-                    )
-                }
-            }
+            horizontalAlignment =
+                Alignment.CenterHorizontally
         ) {
-            Text("✨ INVOCAR ✨", fontSize = 18.sp)
-        }
 
-        Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(40.dp))
 
-        resultado?.let { espada ->
+            /*
+            ----------------------------------------
+            TÍTULO
+            ----------------------------------------
+            */
 
+            Text(
+                text = "✨ GACHAPON GENSHIKENCS.es ✨",
 
-            val colorFondo = when (espada.rareza) {
-                Rareza.COMUN -> Color.Gray
-                Rareza.RARA -> Color.Cyan
-                Rareza.EPICA -> Color.Magenta
-                Rareza.LEGENDARIA -> Color.Yellow
-            }
+                modifier = Modifier.fillMaxWidth(),
+
+                fontSize = 30.sp,
+
+                fontWeight = FontWeight.ExtraBold,
+
+                color = Color.White
+            )
+
+            Spacer(Modifier.height(18.dp))
+
+            /*
+            ----------------------------------------
+            MONEDAS
+            ----------------------------------------
+            */
 
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = MaterialTheme.shapes.large,
-                elevation = CardDefaults.cardElevation(8.dp),
-                        colors = CardDefaults.cardColors(
-                        containerColor = colorFondo
-                        )
+                colors = CardDefaults.cardColors(
+                    containerColor =
+                        Color.White.copy(alpha = 0.12f)
+                ),
+
+                shape = RoundedCornerShape(18.dp)
             ) {
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Text(
+                    text =
+                        "🪙 Monedas: ${GachaState.monedas.value}",
 
-                    Image(
-                        painter = painterResource(espada.imagen),
-                        contentDescription = espada.nombre,
-                        modifier = Modifier
-                            .size(180.dp)
-                    )
+                    modifier = Modifier.padding(
+                        horizontal = 20.dp,
+                        vertical = 12.dp
+                    ),
 
-                    Spacer(Modifier.height(16.dp))
+                    color = Color.White,
 
-                    Text(
-                        espada.nombre,
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                    fontWeight = FontWeight.Bold,
 
-                    Spacer(Modifier.height(8.dp))
-                    val colorFondo = when (espada.rareza) {
-                        Rareza.COMUN -> Color.LightGray
-                        Rareza.RARA -> Color.Cyan
-                        Rareza.EPICA -> Color.Magenta
-                        Rareza.LEGENDARIA -> Color.Yellow
+                    fontSize = 18.sp
+                )
+            }
+
+            Spacer(Modifier.height(35.dp))
+
+            /*
+            ----------------------------------------
+            BOTÓN INVOCAR X1
+            ----------------------------------------
+            */
+
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(68.dp)
+                    .scale(scaleBoton),
+
+                shape = RoundedCornerShape(24.dp),
+
+                colors = ButtonDefaults.buttonColors(
+                    containerColor =
+                        Color(0xFFFACC15),
+
+                    contentColor =
+                        Color.Black
+                ),
+
+                onClick = {
+
+                    if (GachaState.monedas.value >= 10) {
+
+                        animarCartas = false
+
+                        resultados = emptyList()
+
+                        GachaState.monedas.value -= 10
+
+                        val espada = tirarGacha()
+
+                        if (espada != null) {
+
+                            resultados = listOf(espada)
+
+                            GachaState.añadirEspada(
+                                espada.id
+                            )
+
+                            UserRepository.guardarEspada(
+                                UserSession.userId,
+                                espada.id
+                            )
+                        }
+
+                        UserRepository.guardarMonedas(
+                            UserSession.userId,
+                            GachaState.monedas.value
+                        )
+
+                        animarCartas = true
                     }
+                }
+            ) {
 
-                    val estrellas = when (espada.rareza) {
-                        Rareza.COMUN -> 1
-                        Rareza.RARA -> 2
-                        Rareza.EPICA -> 3
-                        Rareza.LEGENDARIA -> 4
+                Text(
+                    text = "✨ INVOCAR x1 ✨",
+
+                    fontSize = 22.sp,
+
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            /*
+            ----------------------------------------
+            BOTÓN INVOCAR X10
+            ----------------------------------------
+            */
+
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(68.dp).
+                    scale(scaleBoton),
+
+                shape = RoundedCornerShape(24.dp),
+
+                colors = ButtonDefaults.buttonColors(
+                    containerColor =
+                        Color(0xFF9333EA),
+
+                    contentColor =
+                        Color.White
+                ),
+
+                onClick = {
+
+                    if (GachaState.monedas.value >= 100) {
+
+                        animarCartas = false
+
+                        resultados = emptyList()
+
+                        GachaState.monedas.value -= 100
+
+                        val nuevasEspadas =
+                            mutableListOf<EspadaOnline>()
+
+                        repeat(10) {
+
+                            val espada = tirarGacha()
+
+                            if (espada != null) {
+
+                                nuevasEspadas.add(espada)
+
+                                GachaState.añadirEspada(
+                                    espada.id
+                                )
+
+                                UserRepository.guardarEspada(
+                                    UserSession.userId,
+                                    espada.id
+                                )
+                            }
+                        }
+
+                        resultados = nuevasEspadas
+
+                        UserRepository.guardarMonedas(
+                            UserSession.userId,
+                            GachaState.monedas.value
+                        )
+
+                        animarCartas = true
                     }
-                    Text(
-                        "⭐".repeat(estrellas),
-                        fontSize = 20.sp
-                    )
+                }
+            ) {
+
+                Text(
+                    text = "🌟 INVOCAR x10 🌟",
+
+                    fontSize = 22.sp,
+
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
+
+            Spacer(Modifier.height(36.dp))
+
+            /*
+            ----------------------------------------
+            RESULTADOS
+            ----------------------------------------
+            */
+
+            AnimatedVisibility(
+                visible = resultados.isNotEmpty()
+                        && animarCartas,
+
+                enter =
+                    fadeIn(
+                        animationSpec =
+                            tween(500)
+                    ) +
+
+                            scaleIn(
+                                initialScale = 0.4f,
+
+                                animationSpec =
+                                    tween(500)
+                            )
+            ) {
+
+                Column {
+
+                    resultados.chunked(2).forEach { fila ->
+
+                        Row(
+                            horizontalArrangement =
+                                Arrangement.spacedBy(12.dp),
+
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+
+                            fila.forEach { espada ->
+
+                                val colorFondo =
+                                    when (espada.rareza) {
+
+                                        "COMUN" ->
+                                            Color.Gray
+
+                                        "RARA" ->
+                                            Color(0xFF38BDF8)
+
+                                        "EPICA" ->
+                                            Color(0xFFC084FC)
+
+                                        else ->
+                                            Color(0xFFFACC15)
+                                    }
+
+                                val estrellas =
+                                    when (espada.rareza) {
+
+                                        "COMUN" -> 1
+                                        "RARA" -> 2
+                                        "EPICA" -> 3
+                                        else -> 4
+                                    }
+
+                                Card(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(bottom = 12.dp),
+
+                                    shape = RoundedCornerShape(24.dp),
+
+                                    elevation =
+                                        CardDefaults.cardElevation(
+                                            10.dp
+                                        ),
+
+                                    colors =
+                                        CardDefaults.cardColors(
+                                            containerColor =
+                                                colorFondo
+                                        )
+                                ) {
+
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+
+                                        horizontalAlignment =
+                                            Alignment.CenterHorizontally
+                                    ) {
+
+                                        Text(
+                                            text =
+                                                espada.rareza,
+
+                                            fontWeight =
+                                                FontWeight.Bold,
+
+                                            color = Color.Black
+                                        )
+
+                                        Spacer(
+                                            Modifier.height(10.dp)
+                                        )
+
+                                        AsyncImage(
+
+                                            model = espada.imagen_url,
+
+                                            contentDescription = espada.nombre,
+
+                                            modifier = Modifier.size(120.dp)
+                                        )
+
+                                        Spacer(
+                                            Modifier.height(10.dp)
+                                        )
+
+                                        Text(
+                                            text =
+                                                espada.nombre,
+
+                                            fontWeight =
+                                                FontWeight.ExtraBold,
+
+                                            fontSize = 16.sp,
+
+                                            color = Color.Black
+                                        )
+
+                                        Spacer(
+                                            Modifier.height(6.dp)
+                                        )
+
+                                        Text(
+                                            text =
+                                                "⭐".repeat(
+                                                    estrellas
+                                                ),
+
+                                            fontSize = 18.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        }
 
-        Spacer(Modifier.height(30.dp))
+            Spacer(Modifier.height(20.dp))
 
-        Button(onClick = {
-            navController.navigate("coleccion")
-        }) {
-            Text(" Colección")
+            /*
+            ----------------------------------------
+            BOTÓN COLECCIÓN
+            ----------------------------------------
+            */
+
+            OutlinedButton(
+                onClick = {
+                    navController.navigate(
+                        "coleccion"
+                    )
+                },
+
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+
+                shape = RoundedCornerShape(18.dp),
+
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color.White
+                )
+            ) {
+
+                Text(
+                    text = " Ver colección",
+
+                    fontSize = 18.sp,
+
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            /*
+            ----------------------------------------
+            BOTÓN VOLVER
+            ----------------------------------------
+            */
+
+            OutlinedButton(
+                onClick = {
+                    navController.navigate("inicio")
+                },
+
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+
+                shape = RoundedCornerShape(18.dp),
+
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color.White
+                )
+            ) {
+
+                Text(
+                    text = " Volver al inicio",
+
+                    fontSize = 18.sp,
+
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(Modifier.height(30.dp))
         }
     }
 }

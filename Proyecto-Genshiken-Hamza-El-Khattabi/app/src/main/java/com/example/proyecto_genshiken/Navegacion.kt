@@ -46,5 +46,11 @@ fun Navegacion(navController: NavHostController){
         composable("coleccion") {
             PantallaColeccion(navController)
         }
+        composable("terminos") {
+
+            TerminosServicios(
+                navController
+            )
+        }
     }
 }

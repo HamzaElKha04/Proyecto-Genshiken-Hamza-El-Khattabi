@@ -69,12 +69,29 @@ object Curiosidades {
         "¿Sabías que cualquier lugar se ve más bonito si decimos que está en Japón?",
         "¿Sabías que en Inazuma Eleven 2 hay un texto en el que no recomiendan imitar las supertécnicas? y yo que ya tenía los pinguinos...",
         "¿Sabías que nunca voy a abandonarte, nunca te decepcionaré, nunca andaré de vago ni te abandonaré?",
-        "¿Sabías que existe un Anime de la Biblia? Parece ser que el episodio donde Jesus muere tuvo malas críticas y el autor decidió revivirlo? Que conveniencia del guión",
+        "¿Sabías que existe un Anime de la Biblia? Parece ser que el episodio donde Jesus muere tuvo malas críticas y el autor decidió revivirlo... Que conveniencia del guión",
         "¿Sabías que existe un concepto universal en internet donde aparece FranYaoi en cualquier lado?",
         "¿Sabías que el otro día vi Boku No Pico? Buah, pedazo de serie, me gusta el rubio, pero aun no entiendo donde esta la temática de superhéroes ¿Y quíen es Deku? ¿Será que aparece en la siguiente temporada?",
         "¿Sabes que juego hizo Willyrex? ¡RESPONDE A LA PREGUNTA! ¡¿QUÉ JUEGO HIZO WILLYREX!?",
-        "¿Sabías que hay personas a las que les hace gracia el numero 7? Y también el color azul, y los zapatos, y que las chicas solo valgan 1. De las dos personas que hayan difundido eso, uno debe de tener unos testículos muy débiles y llamarse Marcos, el otro debe de ser un mitómano ladrón de pozos. Que específico ¿Verdad? ",
-        "¿Sabías que El Castillo Infinito de Kimetsu No Yaiba no era tan infinito? Ahora que lo pienso el tren tampoco era tan infinito"
+        "¿Sabías que hay personas a las que les hace gracia el numero 7? Y también el color azul, y los zapatos, y que las chicas solo valgan 1. De las dos personas que hayan difundido eso, uno debe de tener unos testículos muy débiles y llamarse Marcos, mientras que el otro debe de ser un mitómano furro ladrón de pozos. Que específico ¿Verdad? ",
+        "¿Sabías que El Castillo Infinito de Kimetsu No Yaiba no era tan infinito? Ahora que lo pienso el tren tampoco era tan infinito...",
+        "¿Sabías que Naruto se imagina a Sasuke después de ver a un hombre desnudo en unos baños? 🤨🏳️‍🌈?",
+        "¿Sabías que si en Persona 5 no prestas atención a las clases, seguramente suspenderás los examenes? ¡Es como la vida real!",
+        "¿Sabías que en My Hero Academia, ningún villano acaba recordando a Magnet?",
+        "¿Sabías que MiHoyo solo me da disgustos? Siempre acaba traicionandome cuando menos me lo espero...",
+        "¿Sabías que mucha gente se compró el Resident Evil VIII solo por Lady Dimitrescu? casualmente uno de los mods más populares es el del matamoscas",
+        "Sabías que en Danganronpa, por mucho que el asesino confiese y grite, o se demuestre que Makoto tenía coartada, si fallas mucho, todo el mundo pensará que el asesino fue Makoto y le votarán",
+        "¿Sabías que en Wuthering Waves, si pisas la academía, tu dispositivo literalmente arde?",
+        "¿Sabías que Zenless Zone Zero no esconde que hay una toda una subtrama de tráfico de organos en Nueva Eridu?",
+        "¿Sabías que casi nadie sabe como se escribe 'Monsdtadt?' ¿O era Mondstadt? ¿Quiza Monstat...? ¡Bah! Seguro que el nombre de la región de cryo es más facil de escribir",
+        "¿Sabías que esto no es un Short? no como los vídeos de cierto noruego",
+        "¿Sabiás que en el mundo de Super Mario todos son amigos? Por muchos secuestros que hayan, al final todos acaban yendo a jugar al tenis o a las carreras. Aunque ironicamente todo tiene el nombre de mario... Mario Kart, Mario Tenis, Mario Party... \n Que egocéntrico ¿No?",
+        "¿Sabías que Hogwarts es el lugar más seguro del mundo?",
+        "¿Sabías que soi un vanpiro cristina?",
+        "¿Sabías que Rudeus está incluso más perturbado que Kazuma? Creeme que si...",
+        "¿Sabías que existe un fanfic de Death Note cuyo protagonista es Dark Yagami? es... curioso cuanto menos",
+        "¿Sabías que este juego no esta traducido al inglés porque no encaja dentro de mi visión creativa?",
+        "¿Sabías que no puedo amarte? No porque seas un conejo, sino porque eres neg-"
 
 
 

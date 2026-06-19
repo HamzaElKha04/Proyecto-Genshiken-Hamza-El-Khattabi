@@ -39,4 +39,18 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    /*
+    --------------------------------------------------
+    Cierre de la app
+    --------------------------------------------------
+
+    Cuando se destruye la actividad, se libera la música
+    para evitar que siga sonando en segundo plano.
+    */
+    override fun onDestroy() {
+        super.onDestroy()
+
+        MusicManager.pararMusica()
+    }
 }

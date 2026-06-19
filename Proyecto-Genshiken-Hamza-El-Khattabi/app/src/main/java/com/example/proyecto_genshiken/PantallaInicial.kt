@@ -45,6 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,12 +57,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 
 /*
 --------------------------------------------------
@@ -80,7 +83,28 @@ Incluye:
 */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+
 fun PantallaInicio(navController: NavController) {
+    val context = LocalContext.current
+
+    /*
+    --------------------------------------------------
+    Música del menú
+    --------------------------------------------------
+
+    Al abrir la app por primera vez, el emulador carga
+    pantalla, imágenes, animaciones y música a la vez.
+
+    Por eso se retrasa un poco la música del menú.
+    Así primero carga la interfaz y luego empieza el audio.
+    */
+    LaunchedEffect(Unit) {
+
+        delay(1500)
+
+        MusicManager.reproducirMenu(context)
+    }
+
 
     val curiosidad = remember { Curiosidades.lista.random() }
     var expandir by remember { mutableStateOf(false) }
@@ -128,7 +152,7 @@ fun PantallaInicio(navController: NavController) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Genshiken",
+                        text = "GenshikenCS.es",
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -165,6 +189,23 @@ fun PantallaInicio(navController: NavController) {
                                 navController.navigate("cambiarNombre")
                             }
                         )
+                        if (UserSession.userId != 0) {
+
+                        DropdownMenuItem(
+                            text = { Text("Cerrar sesión") },
+                            onClick = {
+
+                                expandir = false
+
+                                UserSession.userId = 0
+                                UserSession.userName = ""
+
+                                navController.navigate("inicioSesionCompeti") {
+                                    popUpTo(0)
+                                }
+                            }
+                        )
+                    }
                     }
                 }
             )
@@ -223,7 +264,7 @@ fun PantallaInicio(navController: NavController) {
                 Spacer(modifier = Modifier.height(28.dp))
 
                 Text(
-                    text = "Trivia Genshiken",
+                    text = "Trivia GenshikenCS.es",
                     fontSize = 30.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White,
@@ -257,7 +298,10 @@ fun PantallaInicio(navController: NavController) {
                     subtitulo = "Juega una partida rápida sin presión.",
                     imagen = R.drawable.espadacasual,
                     onClick = {
-                        navController.navigate("inicioSesionCasual")
+
+                        GameMode.esCompetitivo = false
+
+                        navController.navigate("Juego")
                     }
                 )
 
@@ -268,6 +312,7 @@ fun PantallaInicio(navController: NavController) {
                     subtitulo = "Compite, suma puntos y sube en el ranking.",
                     imagen = R.drawable.espadacasual,
                     onClick = {
+                        GameMode.esCompetitivo = true
                         if (UserSession.userId == 0) {
                             navController.navigate("inicioSesionCompeti")
                         } else {
@@ -351,13 +396,25 @@ fun PantallaInicio(navController: NavController) {
                             color = Color(0xFF111827)
                         )
                     }
+
                 }
 
+
                 Spacer(modifier = Modifier.height(30.dp))
+                Text(
+                    text = "Mark&Raph Development®",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 15.sp,
+                    color = Color.White
+                )
             }
+
         }
+
     }
+
 }
+
 
 /*
 --------------------------------------------------
